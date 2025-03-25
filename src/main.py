@@ -1,29 +1,33 @@
 import pygame
 from settings import *
+from scenes.menu import MenuScene
 
-# Inicializa o Pygame
-pygame.init()
 
-# Configurações da tela
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Ozak")
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.running = True
+        self.current_scene = MenuScene(self)  # Começa com o menu
 
-# Cores
-WHITE = (255, 255, 255)
+    def run(self):
+        while self.running:
+            dt = self.clock.tick(FPS) / 1000.0  # Delta time em segundos
 
-# Loop principal
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+            # Trata eventos
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                self.current_scene.handle_events(event)
 
-    # Preenche a tela com branco (como o quarto do jogo)
-    screen.fill(WHITE)
+            # Atualiza e renderiza a cena atual
+            self.current_scene.update(dt)
+            self.current_scene.render(self.screen)
+            pygame.display.flip()
 
-    # Atualiza a tela
-    pygame.display.flip()
+        pygame.quit()
 
-pygame.quit()
+if __name__ == "__main__":
+    game = Game()
+    game.run()
