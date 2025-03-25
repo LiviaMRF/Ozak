@@ -50,17 +50,18 @@ class GameScene:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             bullet = self.player.shoot(pygame.mouse.get_pos())
             if bullet:
-                self.bullets.add(bullet)
+                self.all_sprites.add(bullet)  # Adiciona ao grupo principal
+                self.bullets.add(bullet)  # E ao grupo de balas
 
     def update(self, dt):
         # Atualiza todos os sprites
         self.all_sprites.update(dt)
-        self.bullets.update(dt)
 
         # Remove balas fora da tela
         for bullet in self.bullets:
             if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
                 bullet.kill()
+                self.bullets.remove(bullet)  # Remove do grupo de balas
 
     def render(self, screen):
         screen.fill(self.bg_color)
