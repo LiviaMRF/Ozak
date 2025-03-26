@@ -1,4 +1,2 @@
-- Alterar o nome dos grupos
+- Alterar o nome dos grupos, criando um de player, outro de bullet_player, outro de enemies, outro de bullet_enemies
 - Construir a câmera do jogo (game_scene)
-
-

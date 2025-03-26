@@ -13,6 +13,8 @@ def load_sprite(name, scale=1, convert_alpha=True):
 # Configurações da tela
 SCREEN_WIDTH = 1008
 SCREEN_HEIGHT = 720
+PLAYER_POSITION=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+GAME_CLOUD_SIZE=3
 FPS = 60
 
 # Cores

@@ -9,8 +9,8 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Carrega sprites
-        self.idle_sprite = load_sprite("player/idle.png")
-        self.run_frames = [load_sprite(f"player/run_1.png"),]
+        self.idle_sprite = load_sprite("player/ozak_idle.png")
+        self.run_frames = [load_sprite(f"player/ozak_run_1.png"),]
         self.run_animation = Animation(self.run_frames, speed=0.15)  # Velocidade da animação
 
 
