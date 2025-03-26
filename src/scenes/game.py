@@ -11,7 +11,7 @@ class GameScene:
         # Grupos de sprites
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_bullet_gp = pygame.sprite.Group()
-        self.weapon_pickups = pygame.sprite.Group()
+        self.weapon_pickups_gp = pygame.sprite.Group()
 
         # Cria o jogador
         self.player = Player()
