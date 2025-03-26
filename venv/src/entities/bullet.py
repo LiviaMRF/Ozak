@@ -5,12 +5,12 @@ from settings import *
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, pos, direction, speed=500, damage=10):
         super().__init__()
+
+        # Carrega a imagem da bala
         self.image = load_sprite("bullets/basic.png", scale=0.5)
         self.rect = self.image.get_rect(center=pos)
-        
-        self.image = pygame.Surface((8, 8))
-        self.image.fill((255, 200, 0))  # Amarelo para bullets
-        self.rect = self.image.get_rect(center=pos)
+
+        # Direção e movimento
         self.direction = direction.normalize()
         self.speed = speed
         self.damage = damage
