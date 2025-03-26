@@ -8,32 +8,32 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)):
         super().__init__()
 
-        run_frames = [load_sprite(f"player/run_{i}.png") for i in range(4)]
-        self.run_animation = Animation(run_frames, speed=0.1)
-
         # Carrega sprites
-        self.idle_sprite = load_sprite("player/ozak_idle.png")
+        self.idle_sprite = load_sprite("player/idle.png")
+        self.run_frames = [load_sprite(f"player/run_1.png"),]
+        self.run_animation = Animation(self.run_frames, speed=0.15)  # Velocidade da animação
+
+
         self.weapon_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
 
         # Configuração inicial
         self.image = self.idle_sprite
+        self.base_image = self.image.copy()
         self.rect = self.image.get_rect(center=pos)
+
+        # Sistema de animação
+        self.current_animation = None
+        self.current_sprite = None
+
+        # Configuração inicial
         self.animation_speed = 0.15
         self.current_frame = 0
-        self.cooldown = 0
+        self.cooldown = 0  #cooldown para poder atirar
+
 
         self.current_weapon = "pistol"
         self.weapons = ["pistol"]
 
-        # Configuração de sprites
-        self.original_idle = load_sprite("player/ozak_idle.png")
-        self.original_run_frames = [load_sprite(f"player/run_{i}.png") for i in range(4)]
-        self.run_animation = Animation(self.original_run_frames, speed=0.1)
-
-        # Imagem base atual
-        self.base_image = self.original_idle
-        self.image = self.base_image.copy()
-        self.rect = self.image.get_rect(center=pos)
 
         # Sistema de armas
         self.weapon_image = None
@@ -43,13 +43,10 @@ class Player(pygame.sprite.Sprite):
         # Atributos de movimento
         self.speed = 300
         self.direction = pygame.math.Vector2()
-        #self.width = 1000
-        #self.height = 100
-        #self.x = 0
-        #self.y = 0
 
         # Sistema de estamina (barra azul do GDD)
         self.stamina = StaminaComponent(max_stamina=100, drain_rate=20, recover_rate=15)
+        self.health = 100
 
         # Estado
         self.run_speed_multiplier = 1.8  # Velocidade ao correr
@@ -60,26 +57,18 @@ class Player(pygame.sprite.Sprite):
         self.weapon_offset = pygame.math.Vector2(25, -10)  # Posição relativa ao personagem
         self.load_weapon("pistol")  # Arma inicial
 
-        self.health = 100
-
-        self.weapon_cooldowns = {
-            'pistol': 0.2,
-            'shotgun': 0.8,
-            'rifle': 0.15
-        }
-
 
     def load_weapon(self, weapon_type):
         # Carrega a sprite da arma equipada
         self.weapon_image = load_sprite(f"weapons/{weapon_type}_hand.png")
 
     def update(self, dt):
-        # Atualiza animação
-        if self.direction.magnitude() > 0:
+        # Atualiza o estado da animação
+        if self.is_running and self.direction.magnitude() > 0:
             self.run_animation.update(dt)
-            self.base_image = self.run_animation.current_image()
+            self.current_sprite = self.run_animation.current_image()
         else:
-            self.base_image = self.original_idle
+            self.current_sprite = self.idle_sprite
 
         # Atualiza lógica
         self._handle_input()

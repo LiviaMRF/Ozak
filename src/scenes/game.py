@@ -69,7 +69,10 @@ class GameScene:
 
     def render(self, screen):
         screen.fill(self.bg_color)
-        self.player_sprites.draw(screen)
+
+        # Renderiza o player com a sprite atual (idle ou run)
+        screen.blit(self.player.current_sprite, self.player.rect)
+
         self.bullets.draw(screen)
         self.hud.draw(screen)
 

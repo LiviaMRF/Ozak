@@ -15,7 +15,7 @@ class Game:
         while self.running:
             dt = self.clock.tick(FPS) / 1000.0  # Delta time em segundos
 
-            # Trata eventos
+            # Trata evenwDtos
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
