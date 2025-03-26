@@ -14,13 +14,14 @@ class Player(pygame.sprite.Sprite):
 
         # Carrega sprites
         self.idle_sprite = load_sprite("player/ozak_idle.png")
+        self.weapon_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
 
         # Configuração inicial
         self.image = self.idle_sprite
         self.rect = self.image.get_rect(center=pos)
         self.animation_speed = 0.15
         self.current_frame = 0
-        self.cooldown = 15
+        self.cooldown = 0
 
         self.current_weapon = "pistol"
         self.weapons = ["pistol"]
@@ -58,8 +59,14 @@ class Player(pygame.sprite.Sprite):
         self.weapon_offset = pygame.math.Vector2(25, -10)  # Posição relativa ao personagem
         self.load_weapon("pistol")  # Arma inicial
 
-
         self.health = 100
+
+        self.weapon_cooldowns = {
+            'pistol': 0.2,
+            'shotgun': 0.8,
+            'rifle': 0.15
+        }
+
 
     def load_weapon(self, weapon_type):
         # Carrega a sprite da arma equipada
@@ -116,26 +123,29 @@ class Player(pygame.sprite.Sprite):
                 bullet = Bullet(barrel_pos, direction)
                 self.cooldown = 0.2
                 return bullet
-        else: return None
+        return None
 
     def _update_weapon_position(self):
-        """Atualiza a posição da arma sem afetar a posição do personagem"""
+        # Obtém a posição do cursor do mouse
         mouse_pos = pygame.mouse.get_pos()
+
+        # Calcula a direção do jogador até o cursor
         direction = pygame.math.Vector2(mouse_pos) - pygame.math.Vector2(self.rect.center)
-        angle = direction.angle_to(pygame.math.Vector2(1, 0))
 
-        # Rotaciona a arma
-        rotated_weapon = pygame.transform.rotate(self.weapon_image, angle)
+        if direction.length() > 0:
+            direction = direction.normalize()
 
-        # Calcula a posição da arma relativa ao centro do personagem
-        weapon_pos = self.weapon_offset.rotate(-angle) + pygame.math.Vector2(self.rect.width // 2,
-                                                                             self.rect.height // 2)
+        # Rotaciona a imagem da arma conforme o ângulo da direção
+        angle = -direction.angle_to(pygame.math.Vector2(1, 0))  # Calcula o ângulo correto
 
-        # Cria uma nova imagem composta
-        self.image = self.base_image.copy()
-        self.image.blit(rotated_weapon,
-                        (weapon_pos.x - rotated_weapon.get_width() // 2,
-                         weapon_pos.y - rotated_weapon.get_height() // 2))
+        # Define ponto de fixação (ajuste esses valores)
+        pivot_offset = pygame.math.Vector2(100, 0)  # Relativo ao centro do player
+        weapon_center = self.rect.center + pivot_offset
 
-        # Mantém o rect original
-        self.rect = self.image.get_rect(center=self.rect.center)
+        # Ajusta a posição da arma em relação ao jogador
+        rotated_offset = self.weapon_offset.rotate(angle)  # Aplica rotação ao offset
+        weapon_pos = pygame.math.Vector2(weapon_center) + rotated_offset
+
+        # Atualiza a posição e a rotação da arma
+        self.weapon_image = pygame.transform.rotate(load_sprite(f"weapons/{self.current_weapon}_hand.png"), angle)
+        self.weapon_rect = self.weapon_image.get_rect(center=weapon_pos)

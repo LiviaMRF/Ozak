@@ -1,4 +1,3 @@
-import pygame
 from entities.player import Player
 from settings import *
 from entities.weapon_pickup import WeaponPickup
@@ -10,23 +9,25 @@ class GameScene:
         self.bg_color = WHITE
 
         # Grupos de sprites
-        self.all_sprites = pygame.sprite.Group()
+        self.player_sprites = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
         self.weapon_pickups = pygame.sprite.Group()
 
         # Cria o jogador
         self.player = Player()
-        self.all_sprites.add(self.player)
+        self.player_sprites.add(self.player)
 
         # Sistema de HUD
         self.hud = HUD(self.player)
         self.font = pygame.font.Font(None, 36)
 
+
     def spawn_weapon(self, pos, weapon_type):
         """Adiciona uma arma coletável no cenário"""
         pickup = WeaponPickup(pos, weapon_type)
         self.weapon_pickups.add(pickup)
-        self.all_sprites.add(pickup)
+        self.player_sprites.add(pickup)
+
 
     def _pick_up_weapon(self):
         #Verifica colisão com E pressionado
@@ -39,6 +40,7 @@ class GameScene:
                 pickup.kill()
                 break
 
+
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -47,32 +49,31 @@ class GameScene:
             elif event.key == pygame.K_e:
                 self._pick_up_weapon()
 
+        # Dispara ao clicar com o botão esquerdo do mouse
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             bullet = self.player.shoot(pygame.mouse.get_pos())
             if bullet:
-                self.all_sprites.add(bullet)  # Adiciona ao grupo principal
-                self.bullets.add(bullet)  # E ao grupo de balas
+                self.bullets.add(bullet)
+                self.player_sprites.add(bullet)  # Adiciona a bala no grupo de sprites para ser desenhada
+
 
     def update(self, dt):
         # Atualiza todos os sprites
-        self.all_sprites.update(dt)
+        self.player_sprites.update(dt)
+        self.bullets.update(dt)
 
-        # Remove balas fora da tela
-        for bullet in self.bullets:
+        for bullet in self.bullets.copy():
             if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
                 bullet.kill()
-                self.bullets.remove(bullet)  # Remove do grupo de balas
+
 
     def render(self, screen):
         screen.fill(self.bg_color)
-        self.all_sprites.draw(screen)
+        self.player_sprites.draw(screen)
         self.bullets.draw(screen)
         self.hud.draw(screen)
 
-        # Renderiza texto de estamina
-        stamina_text = self.font.render(
-            f"Estamina: {int(self.player.stamina.current_stamina)}",
-            True,
-            (0, 0, 200)
-        )
-        screen.blit(stamina_text, (10, 10))
+        # Desenha a arma na posição correta
+        if self.player.weapon_image:
+            screen.blit(self.player.weapon_image, self.player.weapon_rect.topleft)
+

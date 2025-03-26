@@ -11,7 +11,7 @@ def load_sprite(name, scale=1, convert_alpha=True):
 
 
 # Configurações da tela
-SCREEN_WIDTH = 1280
+SCREEN_WIDTH = 1008
 SCREEN_HEIGHT = 720
 FPS = 60
 

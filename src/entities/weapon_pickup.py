@@ -1,6 +1,6 @@
 import pygame
 from settings import load_sprite
-from components.weapon import shoot  # Importe suas armas configuradas
+from components.weapon import shoot
 
 class WeaponPickup(pygame.sprite.Sprite):
     def __init__(self, pos, weapon_type="pistol"):
@@ -11,5 +11,5 @@ class WeaponPickup(pygame.sprite.Sprite):
         self.interaction_radius = 50  # Distância para coleta
 
     def can_be_picked(self, player_pos):
-        """Verifica se o jogador está dentro do raio de coleta"""
+        #Verifica se o jogador está dentro do raio de coleta
         return pygame.math.Vector2(self.rect.center).distance_to(player_pos) <= self.interaction_radius
