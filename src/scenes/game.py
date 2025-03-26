@@ -9,8 +9,8 @@ class GameScene:
         self.bg_color = WHITE
 
         # Grupos de sprites
-        self.player_gp = pygame.sprite.GroupSingle()
-        self.player_bullet_gp = pygame.sprite.Group()
+        self.player_sprites = pygame.sprite.Group()
+        self.bullets = pygame.sprite.Group()
         self.weapon_pickups = pygame.sprite.Group()
 
         # Cria o jogador
