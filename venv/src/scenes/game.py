@@ -21,11 +21,13 @@ class GameScene:
         self.hud = HUD(self.player)
         self.font = pygame.font.Font(None, 36)
 
+
     def spawn_weapon(self, pos, weapon_type):
         """Adiciona uma arma coletável no cenário"""
         pickup = WeaponPickup(pos, weapon_type)
         self.weapon_pickups.add(pickup)
         self.player_sprites.add(pickup)
+
 
     def _pick_up_weapon(self):
         #Verifica colisão com E pressionado
@@ -37,6 +39,7 @@ class GameScene:
                     self.player.load_weapon(pickup.weapon_type)  # Carrega o sprite
                 pickup.kill()
                 break
+
 
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
@@ -57,12 +60,12 @@ class GameScene:
     def update(self, dt):
         # Atualiza todos os sprites
         self.player_sprites.update(dt)
-        self.bullets.update(dt)  # Não esqueça desta linha!
-
+        self.bullets.update(dt)
 
         for bullet in self.bullets.copy():
             if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
                 bullet.kill()
+
 
     def render(self, screen):
         screen.fill(self.bg_color)

@@ -14,8 +14,6 @@ class Player(pygame.sprite.Sprite):
 
         # Carrega sprites
         self.idle_sprite = load_sprite("player/ozak_idle.png")
-
-        self.base_image = self.idle_sprite.copy()  # Imagem base sem arma
         self.weapon_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
 
         # Configuração inicial
