@@ -1,4 +1,3 @@
-import pygame
 from components.animation import *
 from settings import *
 from components.stamina import StaminaComponent
@@ -53,6 +52,8 @@ class Player(pygame.sprite.Sprite):
         self.stamina = StaminaComponent(max_stamina=100, drain_rate=20, recover_rate=15)
 
         # Estado
+        self.run_speed_multiplier = 1.8  # Velocidade ao correr
+        self.base_speed = 300  # Velocidade normal
         self.is_running = False
 
         self.weapon_image = None  # Sprite da arma
@@ -102,13 +103,18 @@ class Player(pygame.sprite.Sprite):
         if self.direction.magnitude() > 0:
             self.direction = self.direction.normalize()
 
-        # Corrida (botão direito do mouse - conforme GDD)
-        self.is_running = pygame.mouse.get_pressed()[2] and self.stamina.current_stamina > 0
+            # Corrida (Shift esquerdo) - Só corre se tiver estamina
+        self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and not self.stamina.is_exhausted
 
     def _move(self, dt):
-        speed = self.speed * (1.5 if self.is_running else 1)
-        self.rect.x += self.direction.x * speed * dt
-        self.rect.y += self.direction.y * speed * dt
+        if self.stamina.is_exhausted:
+            speed = self.base_speed * 0.7
+        else: speed = self.base_speed * (self.run_speed_multiplier if self.is_running else 1)
+
+        # Não corre se acabar a estamina
+        if not self.stamina.is_exhausted or not self.is_running:
+            self.rect.x += self.direction.x * speed * dt
+            self.rect.y += self.direction.y * speed * dt
 
         # Limites da tela
         self.rect.x = max(0, min(SCREEN_WIDTH - self.rect.w, self.rect.x))

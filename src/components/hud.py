@@ -29,3 +29,14 @@ class HUD:
         # Texto da arma
         weapon_text = self.font.render(f"Arma: {self.player.current_weapon}", True, WHITE)
         screen.blit(weapon_text, (10, 70))
+
+
+
+
+
+        # Adiciona indicador de estado de corrida
+        #run_status = "CORRENDO" if self.player.is_running else "ANDANDO"
+        #tatus_color = (255, 0, 0) if self.player.stamina.is_exhausted else (0, 255, 0)
+
+        #status_text = self.font.render(f"STATUS: {run_status}", True, status_color)
+        #screen.blit(status_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 40))
