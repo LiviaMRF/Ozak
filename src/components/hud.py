@@ -1,10 +1,9 @@
-import pygame
 from settings import *
 
 class HUD:
     def __init__(self, player):
         self.player = player
-        self.font = pygame.font.Font(None, 20)
+        self.font = pygame.font.SysFont("Arial", 20)
         self.health_bar = pygame.Surface((200, 20))
         self.stamina_bar = pygame.Surface((200, 20))
 
@@ -16,7 +15,7 @@ class HUD:
 
         # Texto Estamina
         stamina_text = self.font.render(f"{int(self.player.stamina.current_stamina)}", True, (255, 255, 255))
-        screen.blit(stamina_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT - 51))
+        screen.blit(stamina_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT - 60))
 
         # Barra de Vida (canto inferior direito)
         health_width = int(200 * (self.player.health / 100))
@@ -25,8 +24,19 @@ class HUD:
 
         # Texto Vida
         health_text = self.font.render(f"{int(self.player.health)}", True, (255, 255, 255))
-        screen.blit(health_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT -30))
+        screen.blit(health_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT -40))
 
         # Texto da arma
         weapon_text = self.font.render(f"Arma: {self.player.current_weapon}", True, WHITE)
         screen.blit(weapon_text, (10, 70))
+
+
+
+
+
+        # Adiciona indicador de estado de corrida
+        #run_status = "CORRENDO" if self.player.is_running else "ANDANDO"
+        #tatus_color = (255, 0, 0) if self.player.stamina.is_exhausted else (0, 255, 0)
+
+        #status_text = self.font.render(f"STATUS: {run_status}", True, status_color)
+        #screen.blit(status_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 40))
