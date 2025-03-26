@@ -1,4 +1,3 @@
-import pygame
 from entities.player import Player
 from settings import *
 from entities.weapon_pickup import WeaponPickup
@@ -26,7 +25,7 @@ class GameScene:
         """Adiciona uma arma coletável no cenário"""
         pickup = WeaponPickup(pos, weapon_type)
         self.weapon_pickups.add(pickup)
-        self.all_sprites.add(pickup)
+        self.player_sprites.add(pickup)
 
     def _pick_up_weapon(self):
         #Verifica colisão com E pressionado

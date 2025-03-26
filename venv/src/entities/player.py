@@ -15,6 +15,9 @@ class Player(pygame.sprite.Sprite):
         # Carrega sprites
         self.idle_sprite = load_sprite("player/ozak_idle.png")
 
+        self.base_image = self.idle_sprite.copy()  # Imagem base sem arma
+        self.weapon_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
+
         # Configuração inicial
         self.image = self.idle_sprite
         self.rect = self.image.get_rect(center=pos)
@@ -137,9 +140,13 @@ class Player(pygame.sprite.Sprite):
         # Rotaciona a imagem da arma conforme o ângulo da direção
         angle = -direction.angle_to(pygame.math.Vector2(1, 0))  # Calcula o ângulo correto
 
+        # Define ponto de fixação (ajuste esses valores)
+        pivot_offset = pygame.math.Vector2(100, 0)  # Relativo ao centro do player
+        weapon_center = self.rect.center + pivot_offset
+
         # Ajusta a posição da arma em relação ao jogador
         rotated_offset = self.weapon_offset.rotate(angle)  # Aplica rotação ao offset
-        weapon_pos = pygame.math.Vector2(self.rect.center) + rotated_offset
+        weapon_pos = pygame.math.Vector2(weapon_center) + rotated_offset
 
         # Atualiza a posição e a rotação da arma
         self.weapon_image = pygame.transform.rotate(load_sprite(f"weapons/{self.current_weapon}_hand.png"), angle)
