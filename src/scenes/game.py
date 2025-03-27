@@ -7,15 +7,20 @@ class GameScene:
     def __init__(self, game):
         self.game = game
         self.bg_color = WHITE
+        
 
         # Grupos de sprites
-        self.player_sprites = pygame.sprite.Group()
-        self.bullets = pygame.sprite.Group()
+        self.bullets_gp = pygame.sprite.Group()
         self.weapon_pickups = pygame.sprite.Group()
+        self.bullet_cloud_gp = pygame.sprite.GroupSingle()
 
-        # Cria o jogador
+        # Cria o jogador e o seu grupo
         self.player = Player()
-        self.player_sprites.add(self.player)
+        self.player_gp = pygame.sprite.GroupSingle()
+        self.player_gp.add(self.player)
+
+        # Cria a SpriteShift
+        self.sprite_shift = (0,0)
 
         # Sistema de HUD
         self.hud = HUD(self.player)
@@ -26,7 +31,7 @@ class GameScene:
         # Adiciona uma arma coletável no cenário
         pickup = WeaponPickup(pos, weapon_type)
         self.weapon_pickups.add(pickup)
-        self.player_sprites.add(pickup)
+        self.player_gp.add(pickup)
 
 
     def _pick_up_weapon(self):
@@ -53,18 +58,19 @@ class GameScene:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             bullet = self.player.shoot(pygame.mouse.get_pos())
             if bullet:
-                self.bullets.add(bullet)
-                self.player_sprites.add(bullet)  # Adiciona a bala no grupo de sprites para ser desenhada
+                self.bullets_gp.add(bullet)
 
 
     def update(self, dt):
         # Atualiza todos os sprites
-        self.player_sprites.update(dt)
-        self.bullets.update(dt)
+        self.sprite_shift = self.player.player_shift(dt)
+        self.player_gp.update(dt)
+        self.bullets_gp.update(dt)
+        
 
-        for bullet in self.bullets.copy():
-            if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
-                bullet.kill()
+        #for bullet in self.bullets_gp.copy():
+        #    if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
+        #        bullet.kill()
 
 
     def render(self, screen):
@@ -73,7 +79,11 @@ class GameScene:
         # Renderiza o player com a sprite atual (idle ou run)
         screen.blit(self.player.current_sprite, self.player.rect)
 
-        self.bullets.draw(screen)
+        for bullet in self.bullets_gp:
+            bullet.rect.x -= self.sprite_shift[0]  # Aplica o offset
+            bullet.rect.y -= self.sprite_shift[1]
+        self.bullets_gp.draw(screen)
+
         self.hud.draw(screen)
 
         # Desenha a arma na posição correta

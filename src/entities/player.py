@@ -20,6 +20,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.idle_sprite
         self.base_image = self.image.copy()
         self.rect = self.image.get_rect(center=pos)
+        self.rect_shifted = self.rect.copy()
 
         # Sistema de animação
         self.current_animation = None
@@ -72,14 +73,12 @@ class Player(pygame.sprite.Sprite):
 
         # Atualiza lógica
         self._handle_input()
-        self._move(dt)
         self.stamina.update(dt, self.is_running)
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza arma
         if self.weapon_image:
             self._update_weapon_position()
-
 
     def _handle_input(self):
         keys = pygame.key.get_pressed()
@@ -95,19 +94,16 @@ class Player(pygame.sprite.Sprite):
             # Corrida (Shift esquerdo) - Só corre se tiver estamina
         self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and not self.stamina.is_exhausted
 
-    def _move(self, dt):
+    def player_shift(self, dt):
         if self.stamina.is_exhausted:
             speed = self.base_speed * 0.7
         else: speed = self.base_speed * (self.run_speed_multiplier if self.is_running else 1)
 
         # Não corre se acabar a estamina
         if not self.stamina.is_exhausted or not self.is_running:
-            self.rect.x += self.direction.x * speed * dt
-            self.rect.y += self.direction.y * speed * dt
-
-        # Limites da tela
-        self.rect.x = max(0, min(SCREEN_WIDTH - self.rect.w, self.rect.x))
-        self.rect.y = max(0, min(SCREEN_HEIGHT - self.rect.h, self.rect.y))
+            self.rect_shifted.move((self.direction.x * speed * dt, self.direction.y * speed * dt))
+            return (self.direction.x * speed * dt, self.direction.y * speed * dt)
+        return (0,0)
 
     def shoot(self, mouse_pos):
         if self.cooldown <= 0 and self.weapon_image:
