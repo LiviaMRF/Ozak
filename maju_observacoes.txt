@@ -3,3 +3,6 @@
 - podemos destruir a classe weapon e trabalhar só com bullets
 - ideia de criar superclasses que vai deixar herança para Player e Enemy
 - dá primeiro update no player, depois na sprite cloud, depois nas balas 
+
+
+- falta trabalhar nos limites de onde o jogador pode andar

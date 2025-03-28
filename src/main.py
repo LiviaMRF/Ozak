@@ -21,7 +21,7 @@ class Game:
                     self.running = False
                 self.current_scene.handle_events(event)
 
-            # Atualiza e renderiza a cena atual
+            # Atualiza e renderizada a cena atual
             self.current_scene.update(dt)
             self.current_scene.render(self.screen)
             pygame.display.flip()

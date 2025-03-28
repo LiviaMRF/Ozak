@@ -2,17 +2,20 @@ from entities.player import Player
 from settings import *
 from entities.weapon_pickup import WeaponPickup
 from components.hud import HUD
+from entities.boundary import Boundary
 
 class GameScene:
     def __init__(self, game):
         self.game = game
         self.bg_color = WHITE
-        
 
-        # Grupos de sprites
+        self.boundary = Boundary()
+        self.boundary_gp = pygame.sprite.GroupSingle()
+        self.boundary_gp.add(self.boundary)
+
+
         self.bullets_gp = pygame.sprite.Group()
         self.weapon_pickups = pygame.sprite.Group()
-        self.bullet_cloud_gp = pygame.sprite.GroupSingle()
 
         # Cria o jogador e o seu grupo
         self.player = Player()
@@ -72,17 +75,24 @@ class GameScene:
         #    if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
         #        bullet.kill()
 
+    def _move_group_render(self, screen, group):
+        for element in group:
+            element.rect.x -= self.sprite_shift[0]  # Aplica o offset
+            element.rect.y -= self.sprite_shift[1]
+        group.draw(screen)    
+
 
     def render(self, screen):
         screen.fill(self.bg_color)
 
         # Renderiza o player com a sprite atual (idle ou run)
-        screen.blit(self.player.current_sprite, self.player.rect)
+        self.player_gp.draw(screen)
 
-        for bullet in self.bullets_gp:
-            bullet.rect.x -= self.sprite_shift[0]  # Aplica o offset
-            bullet.rect.y -= self.sprite_shift[1]
-        self.bullets_gp.draw(screen)
+        
+        self._move_group_render(screen, self.bullets_gp)
+        self._move_group_render(screen, self.boundary_gp)
+
+
 
         self.hud.draw(screen)
 

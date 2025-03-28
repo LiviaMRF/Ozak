@@ -20,7 +20,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.idle_sprite
         self.base_image = self.image.copy()
         self.rect = self.image.get_rect(center=pos)
-        self.rect_shifted = self.rect.copy()
+        self.pos_shifted = list(self.rect.topleft)
 
         # Sistema de animação
         self.current_animation = None
@@ -101,8 +101,23 @@ class Player(pygame.sprite.Sprite):
 
         # Não corre se acabar a estamina
         if not self.stamina.is_exhausted or not self.is_running:
-            self.rect_shifted.move((self.direction.x * speed * dt, self.direction.y * speed * dt))
-            return (self.direction.x * speed * dt, self.direction.y * speed * dt)
+            
+            shift_x=self.direction.x * speed * dt
+            if   -(GAME_CLOUD_SIZE-1)*SCREEN_WIDTH/2 > self.pos_shifted[0]+shift_x \
+                or self.pos_shifted[0]+ shift_x + self.rect.width > (GAME_CLOUD_SIZE+1)*SCREEN_WIDTH/2:
+
+                shift_x=0
+
+            shift_y = self.direction.y * speed * dt
+            if   -(GAME_CLOUD_SIZE-1)*SCREEN_HEIGHT/2 > self.pos_shifted[1]+shift_y \
+                or self.pos_shifted[1]+ shift_y + self.rect.height> (GAME_CLOUD_SIZE+1)*SCREEN_HEIGHT/2:
+                
+                shift_y=0
+        
+            self.pos_shifted[0] += shift_x
+            self.pos_shifted[1] += shift_y
+            return (shift_x, shift_y)
+        
         return (0,0)
 
     def shoot(self, mouse_pos):
@@ -111,7 +126,7 @@ class Player(pygame.sprite.Sprite):
             if direction.length() > 0:
                 # Posição do cano da arma
                 barrel_pos = self.rect.center + self.weapon_offset.rotate(-direction.angle_to((1, 0)))
-                bullet = Bullet(barrel_pos, direction)
+                bullet = Bullet(barrel_pos, self.pos_shifted, direction)
                 self.cooldown = 0.2
                 return bullet
         return None
