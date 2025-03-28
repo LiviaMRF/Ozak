@@ -4,5 +4,6 @@
 - ideia de criar superclasses que vai deixar herança para Player e Enemy
 - dá primeiro update no player, depois na sprite cloud, depois nas balas 
 
-
+-Não correr se estiver parado
+-Depois tem que ajustas o pos_shifted da bullet para que ela seja gerada no lugar certo
 - falta trabalhar nos limites de onde o jogador pode andar
