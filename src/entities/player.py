@@ -1,7 +1,7 @@
 from components.animation import *
 from settings import *
 from components.stamina import StaminaComponent
-from entities.bullet import Bullet
+from entities.power import Power
 
 
 class Player(pygame.sprite.Sprite):
@@ -9,12 +9,12 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Carrega sprites
-        self.idle_sprite = load_sprite("player/ozak_idle.png")
-        self.run_frames = [load_sprite(f"player/ozak_run_1.png"),]
+        self.idle_sprite = load_sprite("player/ozak_dead.png")
+        self.run_frames = [load_sprite(f"player/ozak_dead.png"),]
         self.run_animation = Animation(self.run_frames, speed=0.15)  # Velocidade da animação
 
 
-        self.weapon_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
+        self.power_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
 
         # Configuração inicial
         self.image = self.idle_sprite
@@ -31,15 +31,12 @@ class Player(pygame.sprite.Sprite):
         self.current_frame = 0
         self.cooldown = 0  #cooldown para poder atirar
 
-
-        self.current_weapon = "pistol"
-        self.weapons = ["pistol"]
-
-
-        # Sistema de armas
-        self.weapon_image = None
-        self.weapon_offset = pygame.math.Vector2(25, -10)
-        self.load_weapon("pistol")
+        # Sistema dos poderes
+        self.current_power = "pink"
+        self.powers = ["pink"]
+        self.power_image = None  # Sprite do poder
+        self.power_offset = pygame.math.Vector2(25, -10) # Posição relativa ao personagem
+        self.load_power("pink") # Poder inicial
 
         # Atributos de movimento
         self.speed = 300
@@ -54,14 +51,10 @@ class Player(pygame.sprite.Sprite):
         self.base_speed = 300  # Velocidade normal
         self.is_running = False
 
-        self.weapon_image = None  # Sprite da arma
-        self.weapon_offset = pygame.math.Vector2(25, -10)  # Posição relativa ao personagem
-        self.load_weapon("pistol")  # Arma inicial
 
-
-    def load_weapon(self, weapon_type):
-        # Carrega a sprite da arma equipada
-        self.weapon_image = load_sprite(f"weapons/{weapon_type}_hand.png")
+    def load_power(self, power_type):
+        # Carrega a sprite do poder equipado
+        self.power_image = load_sprite(f"powers/{power_type}.png")
 
     def update(self, dt):
         # Atualiza o estado da animação
@@ -77,8 +70,8 @@ class Player(pygame.sprite.Sprite):
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza arma
-        if self.weapon_image:
-            self._update_weapon_position()
+        if self.power_image:
+            self._update_power_position()
 
     def _handle_input(self):
         keys = pygame.key.get_pressed()
@@ -103,14 +96,14 @@ class Player(pygame.sprite.Sprite):
         if not self.stamina.is_exhausted or not self.is_running:
             
             shift_x=self.direction.x * speed * dt
-            if   -(GAME_CLOUD_SIZE-1)*SCREEN_WIDTH/2 > self.pos_shifted[0]+shift_x \
-                or self.pos_shifted[0]+ shift_x + self.rect.width > (GAME_CLOUD_SIZE+1)*SCREEN_WIDTH/2:
+            if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.pos_shifted[0]+shift_x \
+                or self.pos_shifted[0]+ shift_x + self.rect.width > (MAP_SCALE+1)*SCREEN_WIDTH/2:
 
                 shift_x=0
 
             shift_y = self.direction.y * speed * dt
-            if   -(GAME_CLOUD_SIZE-1)*SCREEN_HEIGHT/2 > self.pos_shifted[1]+shift_y \
-                or self.pos_shifted[1]+ shift_y + self.rect.height> (GAME_CLOUD_SIZE+1)*SCREEN_HEIGHT/2:
+            if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.pos_shifted[1]+shift_y \
+                or self.pos_shifted[1]+ shift_y + self.rect.height> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
                 
                 shift_y=0
         
@@ -120,18 +113,18 @@ class Player(pygame.sprite.Sprite):
         
         return (0,0)
 
-    def shoot(self, mouse_pos):
-        if self.cooldown <= 0 and self.weapon_image:
+    def unleash_power(self, mouse_pos):
+        if self.cooldown <= 0 and self.power_image:
             direction = pygame.math.Vector2(mouse_pos) - pygame.math.Vector2(self.rect.center)
             if direction.length() > 0:
                 # Posição do cano da arma
-                barrel_pos = self.rect.center + self.weapon_offset.rotate(-direction.angle_to((1, 0)))
-                bullet = Bullet(barrel_pos, self.pos_shifted, direction)
+                power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
+                power_ball = Power(power_ball_pos, self.pos_shifted, direction)
                 self.cooldown = 0.2
-                return bullet
+                return power_ball
         return None
 
-    def _update_weapon_position(self):
+    def _update_power_position(self):
         # Obtém a posição do cursor do mouse
         mouse_pos = pygame.mouse.get_pos()
 
@@ -146,12 +139,12 @@ class Player(pygame.sprite.Sprite):
 
         # Define ponto de fixação (ajuste esses valores)
         pivot_offset = pygame.math.Vector2(100, 0)  # Relativo ao centro do player
-        weapon_center = self.rect.center + pivot_offset
+        power_center = self.rect.center + pivot_offset
 
         # Ajusta a posição da arma em relação ao jogador
-        rotated_offset = self.weapon_offset.rotate(angle)  # Aplica rotação ao offset
-        weapon_pos = pygame.math.Vector2(weapon_center) + rotated_offset
+        rotated_offset = self.power_offset.rotate(angle)  # Aplica rotação ao offset
+        power_pos = pygame.math.Vector2(power_center) + rotated_offset
 
         # Atualiza a posição e a rotação da arma
-        self.weapon_image = pygame.transform.rotate(load_sprite(f"weapons/{self.current_weapon}_hand.png"), angle)
-        self.weapon_rect = self.weapon_image.get_rect(center=weapon_pos)
+        self.power_image = pygame.transform.rotate(load_sprite(f"powers/{self.current_power}.png"), angle)
+        self.power_rect = self.power_image.get_rect(center=power_pos)

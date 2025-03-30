@@ -27,8 +27,8 @@ class HUD:
         screen.blit(health_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT -40))
 
         # Texto da arma
-        weapon_text = self.font.render(f"Arma: {self.player.current_weapon}", True, WHITE)
-        screen.blit(weapon_text, (10, 70))
+        power_text = self.font.render(f"Arma: {self.player.current_power}", True, WHITE)
+        screen.blit(power_text, (10, 70))
 
 
 

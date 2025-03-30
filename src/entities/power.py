@@ -2,12 +2,12 @@ import pygame
 from settings import *
 
 
-class Bullet(pygame.sprite.Sprite):
+class Power(pygame.sprite.Sprite):
     def __init__(self, pos, pos_shifted, direction, speed=500, damage=10):
         super().__init__()
 
         # Carrega a imagem da bala
-        self.image = load_sprite("bullets/basic.png", scale=0.5)
+        self.image = load_sprite("powers\pink.png", scale=0.5)
         self.rect = self.image.get_rect(center=pos)
         self.pos_without_shift = pos_shifted.copy()
 
@@ -24,9 +24,9 @@ class Bullet(pygame.sprite.Sprite):
         print(self.pos_without_shift)
 
         # Remove se sair da tela
-        if -(GAME_CLOUD_SIZE-1)*SCREEN_WIDTH/2 > self.pos_without_shift[0]\
-                or self.pos_without_shift[0] > (GAME_CLOUD_SIZE+1)*SCREEN_WIDTH/2\
-                or  -(GAME_CLOUD_SIZE-1)*SCREEN_HEIGHT/2 > self.pos_without_shift[1] \
-                or self.pos_without_shift[1]> (GAME_CLOUD_SIZE+1)*SCREEN_HEIGHT/2:
+        if -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.pos_without_shift[0]\
+                or self.pos_without_shift[0] > (MAP_SCALE+1)*SCREEN_WIDTH/2\
+                or  -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.pos_without_shift[1] \
+                or self.pos_without_shift[1]> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
                 
             self.kill()

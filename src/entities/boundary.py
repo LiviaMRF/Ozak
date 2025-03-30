@@ -6,8 +6,8 @@ class Boundary(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        self.rect = pygame.Rect( -(GAME_CLOUD_SIZE-1)*SCREEN_WIDTH/2, -(GAME_CLOUD_SIZE-1)*SCREEN_HEIGHT/2, \
-                                    GAME_CLOUD_SIZE*SCREEN_WIDTH, GAME_CLOUD_SIZE*SCREEN_HEIGHT)
+        self.rect = pygame.Rect( -(MAP_SCALE-1)*SCREEN_WIDTH/2, -(MAP_SCALE-1)*SCREEN_HEIGHT/2, \
+                                    MAP_SCALE*SCREEN_WIDTH, MAP_SCALE*SCREEN_HEIGHT)
         
         boundary_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
 

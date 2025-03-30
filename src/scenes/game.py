@@ -1,6 +1,6 @@
 from entities.player import Player
 from settings import *
-from entities.weapon_pickup import WeaponPickup
+from entities.power_pickup import PowerPickup
 from components.hud import HUD
 from entities.boundary import Boundary
 
@@ -14,8 +14,8 @@ class GameScene:
         self.boundary_gp.add(self.boundary)
 
 
-        self.bullets_gp = pygame.sprite.Group()
-        self.weapon_pickups = pygame.sprite.Group()
+        self.powers_gp = pygame.sprite.Group()
+        self.power_pickups = pygame.sprite.Group()
 
         # Cria o jogador e o seu grupo
         self.player = Player()
@@ -30,21 +30,21 @@ class GameScene:
         self.font = pygame.font.Font(None, 36)
 
 
-    def spawn_weapon(self, pos, weapon_type):
+    def spawn_power(self, pos, power_type):
         # Adiciona uma arma coletável no cenário
-        pickup = WeaponPickup(pos, weapon_type)
-        self.weapon_pickups.add(pickup)
+        pickup = PowerPickup(pos, power_type)
+        self.power_pickups.add(pickup)
         self.player_gp.add(pickup)
 
 
-    def _pick_up_weapon(self):
+    def _pick_up_power(self):
         #Verifica colisão com E pressionado
-        for pickup in self.weapon_pickups:
+        for pickup in self.power_pickups:
             if pygame.sprite.collide_rect(self.player, pickup):
-                if pickup.weapon_type not in self.player.weapons:  # Evita duplicatas
-                    self.player.weapons.append(pickup.weapon_type)
-                    self.player.current_weapon = pickup.weapon_type  # Equipa automaticamente
-                    self.player.load_weapon(pickup.weapon_type)  # Carrega o sprite
+                if pickup.power_type not in self.player.powers:  # Evita duplicatas
+                    self.player.powers.append(pickup.power_type)
+                    self.player.current_power = pickup.power_type  # Equipa automaticamente
+                    self.player.load_power(pickup.power_type)  # Carrega o sprite
                 pickup.kill()
                 break
 
@@ -55,27 +55,27 @@ class GameScene:
                 from scenes.menu import MenuScene
                 self.game.current_scene = MenuScene(self.game)
             elif event.key == pygame.K_e:
-                self._pick_up_weapon()
+                self._pick_up_power()
 
         # Dispara ao clicar com o botão esquerdo do mouse
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            bullet = self.player.shoot(pygame.mouse.get_pos())
-            if bullet:
-                self.bullets_gp.add(bullet)
+            power = self.player.unleash_power(pygame.mouse.get_pos())
+            if power:
+                self.powers_gp.add(power)
 
 
     def update(self, dt):
         # Atualiza todos os sprites
         self.sprite_shift = self.player.player_shift(dt)
         self.player_gp.update(dt)
-        self.bullets_gp.update(dt)
+        self.powers_gp.update(dt)
         
 
-        #for bullet in self.bullets_gp.copy():
-        #    if not (0 <= bullet.rect.x <= SCREEN_WIDTH and 0 <= bullet.rect.y <= SCREEN_HEIGHT):
-        #        bullet.kill()
+        #for power in self.powers_gp.copy():
+        #    if not (0 <= power.rect.x <= SCREEN_WIDTH and 0 <= power.rect.y <= SCREEN_HEIGHT):
+        #        power.kill()
 
-    def _move_group_render(self, screen, group):
+    def _move_group_and_render(self, screen, group):
         for element in group:
             element.rect.x -= self.sprite_shift[0]  # Aplica o offset
             element.rect.y -= self.sprite_shift[1]
@@ -89,14 +89,14 @@ class GameScene:
         self.player_gp.draw(screen)
 
         
-        self._move_group_render(screen, self.bullets_gp)
-        self._move_group_render(screen, self.boundary_gp)
+        self._move_group_and_render(screen, self.powers_gp)
+        self._move_group_and_render(screen, self.boundary_gp)
 
 
 
         self.hud.draw(screen)
 
         # Desenha a arma na posição correta
-        if self.player.weapon_image:
-            screen.blit(self.player.weapon_image, self.player.weapon_rect.topleft)
+        if self.player.power_image:
+            screen.blit(self.player.power_image, self.player.power_rect.topleft)
 
