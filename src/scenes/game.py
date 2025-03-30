@@ -97,6 +97,6 @@ class GameScene:
         self.hud.draw(screen)
 
         # Desenha a arma na posição correta
-        if self.player.power_image:
-            screen.blit(self.player.power_image, self.player.power_rect.topleft)
+        if self.player.current_power:
+            screen.blit(self.player.current_power.image, self.player.current_power.rect.topleft)
 

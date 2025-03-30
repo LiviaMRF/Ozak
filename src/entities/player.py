@@ -1,7 +1,7 @@
 from components.animation import *
 from settings import *
 from components.stamina import StaminaComponent
-from entities.power import Power
+from entities.power import Power, PowerBall
 
 
 class Player(pygame.sprite.Sprite):
@@ -32,11 +32,8 @@ class Player(pygame.sprite.Sprite):
         self.cooldown = 0  #cooldown para poder atirar
 
         # Sistema dos poderes
-        self.current_power = "pink"
-        self.powers = ["pink"]
-        self.power_image = None  # Sprite do poder
-        self.power_offset = pygame.math.Vector2(25, -10) # Posição relativa ao personagem
-        self.load_power("pink") # Poder inicial
+        self.current_power = Power() # Poder inicial
+        self.power_offset = pygame.math.Vector2(0, 30) # Posição relativa ao personagem
 
         # Atributos de movimento
         self.speed = 300
@@ -52,10 +49,6 @@ class Player(pygame.sprite.Sprite):
         self.is_running = False
 
 
-    def load_power(self, power_type):
-        # Carrega a sprite do poder equipado
-        self.power_image = load_sprite(f"powers/{power_type}.png")
-
     def update(self, dt):
         # Atualiza o estado da animação
         if self.is_running and self.direction.magnitude() > 0:
@@ -70,7 +63,7 @@ class Player(pygame.sprite.Sprite):
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza arma
-        if self.power_image:
+        if self.current_power.image:
             self._update_power_position()
 
     def _handle_input(self):
@@ -114,12 +107,12 @@ class Player(pygame.sprite.Sprite):
         return (0,0)
 
     def unleash_power(self, mouse_pos):
-        if self.cooldown <= 0 and self.power_image:
+        if self.cooldown <= 0 and self.current_power.image:
             direction = pygame.math.Vector2(mouse_pos) - pygame.math.Vector2(self.rect.center)
             if direction.length() > 0:
                 # Posição do cano da arma
                 power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
-                power_ball = Power(power_ball_pos, self.pos_shifted, direction)
+                power_ball = PowerBall(self.current_power.power_type, power_ball_pos, self.pos_shifted, direction)
                 self.cooldown = 0.2
                 return power_ball
         return None
@@ -138,7 +131,7 @@ class Player(pygame.sprite.Sprite):
         angle = -direction.angle_to(pygame.math.Vector2(1, 0))  # Calcula o ângulo correto
 
         # Define ponto de fixação (ajuste esses valores)
-        pivot_offset = pygame.math.Vector2(100, 0)  # Relativo ao centro do player
+        pivot_offset = pygame.math.Vector2(0, 0)  # Relativo ao centro do player
         power_center = self.rect.center + pivot_offset
 
         # Ajusta a posição da arma em relação ao jogador
@@ -146,5 +139,5 @@ class Player(pygame.sprite.Sprite):
         power_pos = pygame.math.Vector2(power_center) + rotated_offset
 
         # Atualiza a posição e a rotação da arma
-        self.power_image = pygame.transform.rotate(load_sprite(f"powers/{self.current_power}.png"), angle)
-        self.power_rect = self.power_image.get_rect(center=power_pos)
+        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers\{self.current_power.power_type}.png"), angle)
+        self.current_power.rect = self.current_power.image.get_rect(center=power_pos)
