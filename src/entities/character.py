@@ -20,11 +20,11 @@ class Character(pygame.sprite.Sprite):
         # Sistema de animação
         self.current_animation = None
         self.current_sprite = None
-
-        # Configuração inicial
         self.animation_speed = 0.15
         self.current_frame = 0
-        self.cooldown = 0  # cooldown para poder atirar
+
+        # Cooldown para poder lançar poder
+        self.cooldown = 0  
 
         # Sistema dos poderes
         self.current_power = Power() # Poder inicial
@@ -33,6 +33,9 @@ class Character(pygame.sprite.Sprite):
         # Atributos de movimento
         self.speed = 300
         self.direction = pygame.math.Vector2()
+
+        # Sistema de vida
+        self.health = 100
 
 
     def update(self, dt):

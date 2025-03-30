@@ -1,13 +1,6 @@
-- Alterar o nome dos grupos, criando um de player, outro de bullet_player, outro de enemies, outro de bullet_enemies
-- Construir a câmera do jogo (game_scene)
-- podemos destruir a classe weapon e trabalhar só com bullets
-- ideia de criar superclasses que vai deixar herança para Player e Enemy
-- dá primeiro update no player, depois na sprite cloud, depois nas balas 
 
 
 
-- Não correr se estiver parado
-- Character class 
-- Ajustar a bullet para circular o jogador, pelo 
-- Depois tem que ajustas o pos_shifted da bullet para que ela seja gerada no lugar certo
+
 - Dar uma ventaniazinha quando o jogador estiver correndo
+-https://stackoverflow.com/questions/63369201/how-to-change-the-cursor-in-pygame-to-a-custom-image para criar um botão de mouse bonitinho

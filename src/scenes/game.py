@@ -71,10 +71,6 @@ class GameScene:
         self.powers_gp.update(dt)
         
 
-        #for power in self.powers_gp.copy():
-        #    if not (0 <= power.rect.x <= SCREEN_WIDTH and 0 <= power.rect.y <= SCREEN_HEIGHT):
-        #        power.kill()
-
     def _move_group_and_render(self, screen, group):
         for element in group:
             element.rect.x -= self.sprite_shift[0]  # Aplica o offset
@@ -93,10 +89,9 @@ class GameScene:
         self._move_group_and_render(screen, self.boundary_gp)
 
 
-
         self.hud.draw(screen)
 
-        # Desenha a arma na posição correta
+        # Desenha o poder na posição correta
         if self.player.current_power:
             screen.blit(self.player.current_power.image, self.player.current_power.rect.topleft)
 
