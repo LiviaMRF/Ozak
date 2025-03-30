@@ -10,3 +10,4 @@
 - Character class 
 - Ajustar a bullet para circular o jogador, pelo 
 - Depois tem que ajustas o pos_shifted da bullet para que ela seja gerada no lugar certo
+- Dar uma ventaniazinha quando o jogador estiver correndo

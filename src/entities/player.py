@@ -14,13 +14,10 @@ class Player(pygame.sprite.Sprite):
         self.run_animation = Animation(self.run_frames, speed=0.15)  # Velocidade da animação
 
 
-        self.power_anchor = pygame.math.Vector2(15, 5)  # Ponto de fixação da arma
-
         # Configuração inicial
         self.image = self.idle_sprite
-        self.base_image = self.image.copy()
         self.rect = self.image.get_rect(center=pos)
-        self.pos_shifted = list(self.rect.topleft)
+        self.real_pos = list(self.rect.topleft)
 
         # Sistema de animação
         self.current_animation = None
@@ -33,7 +30,7 @@ class Player(pygame.sprite.Sprite):
 
         # Sistema dos poderes
         self.current_power = Power() # Poder inicial
-        self.power_offset = pygame.math.Vector2(0, 30) # Posição relativa ao personagem
+        self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
         self.speed = 300
@@ -72,13 +69,14 @@ class Player(pygame.sprite.Sprite):
         # Movimento básico (WASD)
         self.direction.x = keys[pygame.K_d] - keys[pygame.K_a]
         self.direction.y = keys[pygame.K_s] - keys[pygame.K_w]
+        is_moving = self.direction.magnitude() > 0
 
         # Normaliza diagonal
-        if self.direction.magnitude() > 0:
+        if is_moving:
             self.direction = self.direction.normalize()
 
-            # Corrida (Shift esquerdo) - Só corre se tiver estamina
-        self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and not self.stamina.is_exhausted
+        # Corrida (Shift esquerdo) - Só corre se tiver estamina
+        self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and (not self.stamina.is_exhausted) and is_moving
 
     def player_shift(self, dt):
         if self.stamina.is_exhausted:
@@ -89,19 +87,19 @@ class Player(pygame.sprite.Sprite):
         if not self.stamina.is_exhausted or not self.is_running:
             
             shift_x=self.direction.x * speed * dt
-            if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.pos_shifted[0]+shift_x \
-                or self.pos_shifted[0]+ shift_x + self.rect.width > (MAP_SCALE+1)*SCREEN_WIDTH/2:
+            if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_pos[0]+shift_x \
+                or self.real_pos[0]+ shift_x + self.rect.width > (MAP_SCALE+1)*SCREEN_WIDTH/2:
 
                 shift_x=0
 
             shift_y = self.direction.y * speed * dt
-            if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.pos_shifted[1]+shift_y \
-                or self.pos_shifted[1]+ shift_y + self.rect.height> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
+            if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_pos[1]+shift_y \
+                or self.real_pos[1]+ shift_y + self.rect.height> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
                 
                 shift_y=0
         
-            self.pos_shifted[0] += shift_x
-            self.pos_shifted[1] += shift_y
+            self.real_pos[0] += shift_x
+            self.real_pos[1] += shift_y
             return (shift_x, shift_y)
         
         return (0,0)
@@ -112,7 +110,8 @@ class Player(pygame.sprite.Sprite):
             if direction.length() > 0:
                 # Posição do cano da arma
                 power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
-                power_ball = PowerBall(self.current_power.power_type, power_ball_pos, self.pos_shifted, direction)
+                real_power_ball_pos = self.real_pos + self.power_offset.rotate(-direction.angle_to((1, 0)))
+                power_ball = PowerBall(self.current_power.power_type, power_ball_pos, real_power_ball_pos, direction)
                 self.cooldown = 0.2
                 return power_ball
         return None
@@ -139,5 +138,5 @@ class Player(pygame.sprite.Sprite):
         power_pos = pygame.math.Vector2(power_center) + rotated_offset
 
         # Atualiza a posição e a rotação da arma
-        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers\{self.current_power.power_type}.png"), angle)
+        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers\{self.current_power.power_type}.png", scale=0.3), angle)
         self.current_power.rect = self.current_power.image.get_rect(center=power_pos)
