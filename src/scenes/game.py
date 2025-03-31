@@ -1,6 +1,5 @@
 from entities.player import Player
 from settings import *
-from entities.power_pickup import PowerPickup
 from components.hud import HUD
 from entities.boundary import Boundary
 
@@ -30,23 +29,6 @@ class GameScene:
         self.font = pygame.font.Font(None, 36)
 
 
-    def spawn_power(self, pos, power_type):
-        # Adiciona uma arma coletável no cenário
-        pickup = PowerPickup(pos, power_type)
-        self.power_pickups.add(pickup)
-        self.player_gp.add(pickup)
-
-
-    def _pick_up_power(self):
-        #Verifica colisão com E pressionado
-        for pickup in self.power_pickups:
-            if pygame.sprite.collide_rect(self.player, pickup):
-                if pickup.power_type not in self.player.powers:  # Evita duplicatas
-                    self.player.powers.append(pickup.power_type)
-                    self.player.current_power = pickup.power_type  # Equipa automaticamente
-                    self.player.load_power(pickup.power_type)  # Carrega o sprite
-                pickup.kill()
-                break
 
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
