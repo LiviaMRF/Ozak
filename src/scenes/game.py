@@ -48,7 +48,6 @@ class GameScene:
                 pickup.kill()
                 break
 
-
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:

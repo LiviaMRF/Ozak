@@ -1,6 +1,16 @@
-
-
-
+- melhorar nome da classe do gamescene, vai haver outras ainda
+- implementar o primeiro inimigo
 
 - Dar uma ventaniazinha quando o jogador estiver correndo
 -https://stackoverflow.com/questions/63369201/how-to-change-the-cursor-in-pygame-to-a-custom-image para criar um botão de mouse bonitinho
+
+Atualizações sobre o jogo
+
+- Digão vai implementar o resto das GameScenes. No caso, sala inicial, com a porta para entrar no jogo, menu (já feito), 
+fight scene (em andamento), gameover-over, gameover-win
+- Digão vai implementar algumas linhas na tela que irão aparecer quando o personagem dá sprint
+- Maju vai construir a classe dos inimigos. O bicho papão vai dar sprint sobre o jogador 
+com cooldown. O médico vai atirar em direção ao jogador enquanto o circula, o alter ego do 
+Ozak vai ser invencível e invariavelmente derrotará o Ozak quando entrar na fase, com vida 
+infinita e hit kill. Implementaremos congelamento da tela por 3 segundos quando o jogador perder
+- O sistema de PowerPickups, até segunda ordem, tá cancelado por motivos de que sugou
