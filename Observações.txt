@@ -9,8 +9,40 @@ Atualizações sobre o jogo
 - Digão vai implementar o resto das GameScenes. No caso, sala inicial, com a porta para entrar no jogo, menu (já feito), 
 fight scene (em andamento), gameover-over, gameover-win
 - Digão vai implementar algumas linhas na tela que irão aparecer quando o personagem dá sprint
-- Maju vai construir a classe dos inimigos. O bicho papão vai dar sprint sobre o jogador 
-com cooldown. O médico vai atirar em direção ao jogador enquanto o circula, o alter ego do 
-Ozak vai ser invencível e invariavelmente derrotará o Ozak quando entrar na fase, com vida 
-infinita e hit kill. Implementaremos congelamento da tela por 3 segundos quando o jogador perder
+
+
+- Maju vai construir a classe dos inimigos. 
+O bicho papão vai dar sprint sobre o jogador com cooldown.
+O médico vai atirar em direção ao jogador enquanto o circula.
+o alter ego do Ozak vai ser invencível e invariavelmente derrotará o Ozak quando entrar na fase, com vida 
+infinita e hit kill. 
+Implementaremos congelamento da tela por 3 segundos quando o jogador perder
+
+
+
 - O sistema de PowerPickups, até segunda ordem, tá cancelado por motivos de que sugou
+
+
+
+
+
+
+Caso voltemos atrás com o power_pickup:
+
+def spawn_power(self, pos, power_type):
+        # Adiciona uma arma coletável no cenário
+        pickup = PowerPickup(pos, power_type)
+        self.power_pickups.add(pickup)
+        self.player_gp.add(pickup)
+
+
+    def _pick_up_power(self):
+        #Verifica colisão com E pressionado
+        for pickup in self.power_pickups:
+            if pygame.sprite.collide_rect(self.player, pickup):
+                if pickup.power_type not in self.player.powers:  # Evita duplicatas
+                    self.player.powers.append(pickup.power_type)
+                    self.player.current_power = pickup.power_type  # Equipa automaticamente
+                    self.player.load_power(pickup.power_type)  # Carrega o sprite
+                pickup.kill()
+                break
