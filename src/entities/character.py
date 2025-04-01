@@ -88,5 +88,5 @@ class Character(pygame.sprite.Sprite):
         power_pos = pygame.math.Vector2(power_center) + rotated_offset
 
         # Atualiza a posição e a rotação da arma
-        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers\{self.current_power.power_type}.png", scale=0.3), angle)
+        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers/{self.current_power.power_type}.png", scale=0.3), angle)
         self.current_power.rect = self.current_power.image.get_rect(center=power_pos)
