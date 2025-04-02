@@ -66,12 +66,9 @@ class Character(pygame.sprite.Sprite):
                 return power_ball
         return None
 
-    def _update_power_position(self):
-        # Obtém a posição do cursor do mouse
-        mouse_pos = pygame.mouse.get_pos()
-
-        # Calcula a direção do jogador até o cursor
-        direction = pygame.math.Vector2(mouse_pos) - pygame.math.Vector2(self.rect.center)
+    def _update_power_position(self, target_pos):
+        # Calcula a direção do character até o cursor
+        direction = pygame.math.Vector2(target_pos) - pygame.math.Vector2(self.rect.center)
 
         if direction.length() > 0:
             direction = direction.normalize()

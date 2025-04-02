@@ -4,5 +4,94 @@ from entities.character import Character
 from entities.power import Power, PowerBall
 
 class BichoPapao(Character):
-    pass
+    def __init__(self, pos, player):
+        super().__init__()
+
+        # Cria referência ao personagem Ozak
+        self.player = player
+
+       # Carrega sprites
+        self.idle_frames = [load_sprite("enemies\doctor_0.png"),]
+        self.moving_frames = [load_sprite(f"enemies\doctor_0.png"),]
+        self.moving_animation = Animation(self.moving_frames, speed=0.20)  # Velocidade da animação
+        self.idle_animation = Animation(self.moving_frames, speed=0.10)  # Velocidade da animação
+
+        # Configuração inicial
+        self.image = self.idle_frames[0]
+        self.rect = self.image.get_rect(center=pos)
+        self.real_pos = list(self.rect.topleft)
+
+        # Sistema de animação
+        self.current_animation = None
+        self.current_sprite = None
+        self.animation_speed = 0.15
+        self.current_frame = 0
+
+        # Cooldown para poder lançar poder
+        self.cooldown = 0  
+
+        # Sistema dos poderes
+        self.current_power = Power("brown") # Poder inicial
+        self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
+
+        # Atributos de movimento
+        self.time=0
+        self.idle_time=5
+        self.running_time=3
+        self.speed = 300
+        self.direction = pygame.math.Vector2()
+        self.is_running = False
+
+        # Sistema de vida
+        self.health = 30
+        
+        
+    def update(self, dt):
+
+        # Atualiza o estado da animação
+        if  self.is_running:
+            self.moving_animation.update(dt)
+            self.current_sprite = self.moving_animation.current_image()
+        else:
+            self.idle_animation.update(dt)
+            self.current_sprite = self.idle_animation.current_image()
+
+        # Atualiza lógica
+        self._move_bicho_papao(dt)
+        self.cooldown = max(0, self.cooldown - dt)
+
+        # Atualiza posição do poder
+        if self.current_power.image:
+            self._update_power_position(self.player.rect.center)
+
+    def _update_moving(self, dt):
+        self.time += dt
+        if self.is_running and self.time > self.running_time:
+            self.is_running=False
+            self.time=0
+        if not self.is_running and self.time > self.idle_time:
+            self.is_running=True
+            self.time=0
+        
+
+    def _move_bicho_papao(self, dt):
+
+        self._update_moving(dt)
+
+        if self.is_running:
+
+            # Movimento básico do inimigo
+            self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+            self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+
+            if self.direction.magnitude()>0:
+                self.direction = self.direction.normalize()
+
+            self.rect.x +=self.direction.x*self.speed*dt
+            self.rect.y +=self.direction.y*self.speed*dt
+            self.real_pos[0] +=self.direction.x*self.speed*dt
+            self.real_pos[1] +=self.direction.y*self.speed*dt
+
+        
+
 

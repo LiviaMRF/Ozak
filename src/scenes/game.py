@@ -2,6 +2,7 @@ from entities.player import Player
 from settings import *
 from components.hud import HUD
 from entities.boundary import Boundary
+from entities.bicho_papao import BichoPapao
 
 class GameScene:
     def __init__(self, game):
@@ -20,6 +21,10 @@ class GameScene:
         self.player = Player()
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_gp.add(self.player)
+
+        # Cria um bicho papao
+        bichopapao = BichoPapao((200, 200), self.player)
+        self.powers_gp.add(bichopapao)
 
         # Cria a SpriteShift
         self.sprite_shift = (0,0)

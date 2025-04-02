@@ -65,7 +65,7 @@ class Player(Character):
 
         # Atualiza posição do poder
         if self.current_power.image:
-            self._update_power_position()
+            self._update_power_position(pygame.mouse.get_pos())
 
     def _handle_input(self):
         keys = pygame.key.get_pressed()

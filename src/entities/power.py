@@ -27,7 +27,6 @@ class PowerBall(Power):
         self.real_power_ball_pos[0] += self.direction[0]*self.speed * dt 
         self.real_power_ball_pos[1] += self.direction[1]*self.speed * dt
 
-        print(self.real_power_ball_pos)
         # Remove se sair da tela
         if -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_power_ball_pos[0]\
                 or self.real_power_ball_pos[0] > (MAP_SCALE+1)*SCREEN_WIDTH/2\
