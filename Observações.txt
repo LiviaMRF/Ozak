@@ -1,5 +1,4 @@
 - melhorar nome da classe do gamescene, vai haver outras ainda
-- implementar o primeiro inimigo
 
 - Dar uma ventaniazinha quando o jogador estiver correndo
 -https://stackoverflow.com/questions/63369201/how-to-change-the-cursor-in-pygame-to-a-custom-image para criar um botão de mouse bonitinho
@@ -11,36 +10,11 @@ fight scene (em andamento), gameover-over, gameover-win
 - Digão vai implementar algumas linhas na tela que irão aparecer quando o personagem dá sprint
 - Fade in e out para as transições de gamescene
 
-- Maju vai construir a classe dos inimigos. 
 
-Implementaremos congelamento da tela por 3 segundos quando o jogador perder
+- Melhorar o sistema de congelamento da tela após o jogador perder
 
 - Classes de gamescene, power_ball serão todas abstratas
-
 
 - Iago vai implementar controle para que os personagens não fiquem sobrepostos com o player, só se aproximem
 até um determinado raio
 
-
-
-- O sistema de PowerPickups, até segunda ordem, tá cancelado por motivos de que sugou
-
-Caso voltemos atrás com o power_pickup:
-
-def spawn_power(self, pos, power_type):
-        # Adiciona uma arma coletável no cenário
-        pickup = PowerPickup(pos, power_type)
-        self.power_pickups.add(pickup)
-        self.player_gp.add(pickup)
-
-
-    def _pick_up_power(self):
-        #Verifica colisão com E pressionado
-        for pickup in self.power_pickups:
-            if pygame.sprite.collide_rect(self.player, pickup):
-                if pickup.power_type not in self.player.powers:  # Evita duplicatas
-                    self.player.powers.append(pickup.power_type)
-                    self.player.current_power = pickup.power_type  # Equipa automaticamente
-                    self.player.load_power(pickup.power_type)  # Carrega o sprite
-                pickup.kill()
-                break
