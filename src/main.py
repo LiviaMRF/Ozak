@@ -1,4 +1,6 @@
 import pygame
+
+from scenes.game import GameScene
 from settings import *
 from scenes.menu import MenuScene
 
@@ -10,6 +12,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.current_scene = MenuScene(self)  # Começa com o menu
+
 
     def run(self):
         while self.running:

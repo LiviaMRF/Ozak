@@ -6,7 +6,7 @@ class Power(pygame.sprite.Sprite):
         super().__init__()
         self.power_type=power_type
         # Carrega a imagem da poder
-        self.image = load_sprite(f"powers\{power_type}.png", scale=0.3)
+        self.image = load_sprite(f"powers/{power_type}.png", scale=0.3)
         self.rect = self.image.get_rect(center=pos)
 
 class PowerBall(Power):
