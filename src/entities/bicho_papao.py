@@ -28,6 +28,7 @@ class BichoPapao(Character):
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
+        self.max_cooldown=1
         self.cooldown = 0  
 
         # Sistema dos poderes
@@ -39,8 +40,9 @@ class BichoPapao(Character):
         self.idle_time=5
         self.running_time=3
         self.speed = 300
-        self.direction = pygame.math.Vector2()
         self.is_running = False
+        self.direction = pygame.math.Vector2()
+        
 
         # Sistema de vida
         self.health = 30
@@ -61,8 +63,7 @@ class BichoPapao(Character):
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza posição do poder
-        if self.current_power.image:
-            self._update_power_position(self.player.rect.center)
+        self._update_power_position(PLAYER_POSITION)
 
     def _update_moving(self, dt):
         self.time += dt
@@ -91,7 +92,5 @@ class BichoPapao(Character):
             self.rect.y +=self.direction.y*self.speed*dt
             self.real_pos[0] +=self.direction.x*self.speed*dt
             self.real_pos[1] +=self.direction.y*self.speed*dt
-
-        
 
 

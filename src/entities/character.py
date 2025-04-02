@@ -24,6 +24,7 @@ class Character(pygame.sprite.Sprite):
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
+        self.max_cooldown=0.2
         self.cooldown = 0  
 
         # Sistema dos poderes
@@ -33,6 +34,7 @@ class Character(pygame.sprite.Sprite):
         # Atributos de movimento
         self.speed = 300
         self.direction = pygame.math.Vector2()
+        self.is_running = False
 
         # Sistema de vida
         self.health = 100
@@ -62,7 +64,7 @@ class Character(pygame.sprite.Sprite):
                 power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
                 real_power_ball_pos = self.real_pos + self.power_offset.rotate(-direction.angle_to((1, 0)))
                 power_ball = PowerBall(self.current_power.power_type, power_ball_pos, real_power_ball_pos, direction)
-                self.cooldown = 0.2
+                self.cooldown = self.max_cooldown
                 return power_ball
         return None
 

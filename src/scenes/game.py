@@ -23,9 +23,10 @@ class GameScene:
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_gp.add(self.player)
 
-        # Cria um bicho papao
+        # Cria um grupo para os inimigos
+        self.enemies_gp = pygame.sprite.Group()
         bichopapao = BichoPapao((200, 200), self.player)
-        self.powers_gp.add(bichopapao)
+        self.enemies_gp.add(bichopapao)
 
         # Cria a SpriteShift
         self.sprite_shift = (0,0)
@@ -69,8 +70,6 @@ class GameScene:
             if event.key == pygame.K_ESCAPE:
                 from scenes.menu import MenuScene
                 self.game.current_scene = MenuScene(self.game)
-            elif event.key == pygame.K_e:
-                self._pick_up_power()
 
         # Dispara ao clicar com o botão esquerdo do mouse
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -87,6 +86,7 @@ class GameScene:
         # Atualiza todos os sprites
         self.sprite_shift = self.player.player_shift(dt)
         self.player_gp.update(dt)
+        self.enemies_gp.update(dt)
         self.powers_gp.update(dt)
 
         self.doors.update(dt)
@@ -105,19 +105,24 @@ class GameScene:
         # Renderiza o player com a sprite atual (idle ou run)
         self.player_gp.draw(screen)
 
+        for enemy in self.enemies_gp:
+            power = enemy.unleash_power(PLAYER_POSITION)
+            if power:
+                self.powers_gp.add(power)
         
         self._move_group_and_render(screen, self.powers_gp)
         self._move_group_and_render(screen, self.boundary_gp)
-
+        self._move_group_and_render(screen, self.enemies_gp)
 
         self.hud.draw(screen)
-
 
         self.doors.draw(screen)
         for door in self.doors:
             pygame.draw.circle(screen, (255, 255, 0), door.rect.center, door.interaction_radius, 1)
 
         # Desenha o poder na posição correta
-        if self.player.current_power:
-            screen.blit(self.player.current_power.image, self.player.current_power.rect.topleft)
+        screen.blit(self.player.current_power.image, self.player.current_power.rect)
+        
+        for enemy in self.enemies_gp:
+            screen.blit(enemy.current_power.image, enemy.current_power.rect)
 

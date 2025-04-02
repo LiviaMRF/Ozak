@@ -27,6 +27,7 @@ class Player(Character):
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
+        self.max_cooldown=0.2
         self.cooldown = 0  
 
         # Sistema dos poderes
@@ -64,8 +65,7 @@ class Player(Character):
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza posição do poder
-        if self.current_power.image:
-            self._update_power_position(pygame.mouse.get_pos())
+        self._update_power_position(pygame.mouse.get_pos())
 
     def _handle_input(self):
         keys = pygame.key.get_pressed()
