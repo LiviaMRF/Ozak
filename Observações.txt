@@ -18,14 +18,14 @@ o alter ego do Ozak vai ser invencível e invariavelmente derrotará o Ozak quan
 infinita e hit kill. 
 Implementaremos congelamento da tela por 3 segundos quando o jogador perder
 
+- Classes de gamescene, character e power_ball serão todas abstratas
+- Consertar as colisões dos characters com as boundaries
+
+
+
 
 
 - O sistema de PowerPickups, até segunda ordem, tá cancelado por motivos de que sugou
-
-
-
-
-
 
 Caso voltemos atrás com o power_pickup:
 
