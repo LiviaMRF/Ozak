@@ -6,7 +6,8 @@ class Door(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((60, 100))  # Tamanho da porta
         self.image.fill((150, 75, 0))  # Cor marrom para a porta
-        self.rect = self.image.get_rect(topleft=pos)
         self.target_scene = target_scene  # Cena destino
         self.interaction_radius = 70  # Distância para interagir
+
+        self.rect = self.image.get_rect(topleft=pos)
 
