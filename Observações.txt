@@ -12,6 +12,7 @@ fight scene (em andamento), gameover-over, gameover-win
 
 
 - Melhorar o sistema de congelamento da tela após o jogador perder
+- Pensar em como vamos organizar o lugar de spawn dos vilões e o tempo para isso
 
 - Classes de gamescene, power_ball serão todas abstratas
 
