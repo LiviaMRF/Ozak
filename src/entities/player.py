@@ -31,7 +31,7 @@ class Player(Character):
         self.cooldown = 0  
 
         # Sistema dos poderes
-        self.current_power = Power() # Poder inicial
+        self.current_power = Power("brown", 500, 10) # Poder inicial
         self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
@@ -40,6 +40,7 @@ class Player(Character):
 
         # Sistema de vida
         self.health = 100
+        self.is_dead=False
 
         # Sistema de estamina (barra azul do GDD)
         self.stamina = StaminaComponent(max_stamina=100, drain_rate=20, recover_rate=15)
@@ -50,6 +51,9 @@ class Player(Character):
         self.is_running = False
 
     def update(self, dt):
+        if self.health<0:
+            self.is_dead=True
+            return 
 
         # Atualiza o estado da animação
         if  self.is_running and self.direction.magnitude() > 0:

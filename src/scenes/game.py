@@ -4,11 +4,14 @@ from settings import *
 from components.hud import HUD
 from entities.boundary import Boundary
 from entities.bicho_papao import BichoPapao
+from entities.medico import Medico
+from entities.alter_ego import AlterEgo
 
 class GameScene:
     def __init__(self, game, scene_name="default"):
         self.game = game
         self.bg_color = WHITE
+        self.scene_time = 0
 
         self.boundary = Boundary()
         self.boundary_gp = pygame.sprite.GroupSingle()
@@ -25,8 +28,8 @@ class GameScene:
 
         # Cria um grupo para os inimigos
         self.enemies_gp = pygame.sprite.Group()
-        bichopapao = BichoPapao((200, 200), self.player)
-        self.enemies_gp.add(bichopapao)
+        alterego = AlterEgo((200, 200), self.player)
+        self.enemies_gp.add(alterego)
 
         # Cria a SpriteShift
         self.sprite_shift = (0,0)
@@ -82,31 +85,36 @@ class GameScene:
                 self._try_enter_door()
 
     def handle_collisions(self):
+
         for enemy_power in self.power_enemy_gp:
-            if self.player.rect.colliderect(enemy_power.rect):
+            #if self.player.rect.colliderect(enemy_power.rect):
+            if self.player.rect.colliderect(enemy_power.rect) \
+            and pygame.sprite.collide_mask(self.player, enemy_power):
+            
                 self.player.lose_health_points(enemy_power.damage)
                 enemy_power.kill()
 
         for player_power in self.power_player_gp:
             for enemy in self.enemies_gp:
-                if enemy.rect.colliderect(player_power.rect):
+                #if enemy.rect.colliderect(player_power.rect):
+                if enemy.rect.colliderect(player_power.rect) \
+                and pygame.sprite.collide_mask(enemy, player_power):
+
                     enemy.lose_health_points(player_power.damage)
                     player_power.kill()
 
-
     def update(self, dt):
-        # Atualiza todos os sprites
-        self.sprite_shift = self.player.player_shift(dt)
-        self.player_gp.update(dt)
-        self.enemies_gp.update(dt)
-        self.power_player_gp.update(dt)
-        self.power_enemy_gp.update(dt)
+        self.scene_time+=dt
 
-        self.doors.update(dt)
-
-        self.handle_collisions()
-
-        
+        if not self.player.is_dead:
+            # Atualiza todos os sprites
+            self.sprite_shift = self.player.player_shift(dt)
+            self.player_gp.update(dt)
+            self.enemies_gp.update(dt)
+            self.power_player_gp.update(dt)
+            self.power_enemy_gp.update(dt)
+            self.doors.update(dt)
+            self.handle_collisions()
 
     def _move_group_and_render(self, screen, group):
         for element in group:
@@ -114,32 +122,35 @@ class GameScene:
             element.rect.y -= self.sprite_shift[1]
         group.draw(screen)    
 
-
     def render(self, screen):
-        screen.fill(self.bg_color)
+        if not self.player.is_dead:
 
-        # Renderiza o player com a sprite atual (idle ou run)
-        self.player_gp.draw(screen)
+            screen.fill(self.bg_color)
 
-        for enemy in self.enemies_gp:
-            power = enemy.unleash_power(PLAYER_POSITION)
-            if power:
-                self.power_enemy_gp.add(power)
-        
-        self._move_group_and_render(screen, self.power_player_gp)
-        self._move_group_and_render(screen, self.power_enemy_gp)
-        self._move_group_and_render(screen, self.boundary_gp)
-        self._move_group_and_render(screen, self.enemies_gp)
+            # Renderiza o player com a sprite atual (idle ou run)
+            self.player_gp.draw(screen)
 
-        self.hud.draw(screen)
+            for enemy in self.enemies_gp:
+                power = enemy.unleash_power(PLAYER_POSITION)
+                if power:
+                    self.power_enemy_gp.add(power)
+            
+            self._move_group_and_render(screen, self.power_player_gp)
+            self._move_group_and_render(screen, self.power_enemy_gp)
+            self._move_group_and_render(screen, self.boundary_gp)
+            self._move_group_and_render(screen, self.enemies_gp)
 
-        self.doors.draw(screen)
-        for door in self.doors:
-            pygame.draw.circle(screen, (255, 255, 0), door.rect.center, door.interaction_radius, 1)
+            self.hud.draw(screen)
 
-        # Desenha o poder na posição correta
-        screen.blit(self.player.current_power.image, self.player.current_power.rect)
-        
-        for enemy in self.enemies_gp:
-            screen.blit(enemy.current_power.image, enemy.current_power.rect)
+            self.doors.draw(screen)
+            for door in self.doors:
+                pygame.draw.circle(screen, (255, 255, 0), door.rect.center, door.interaction_radius, 1)
 
+            # Desenha o poder na posição correta
+            screen.blit(self.player.current_power.image, self.player.current_power.rect)
+            
+            for enemy in self.enemies_gp:
+                screen.blit(enemy.current_power.image, enemy.current_power.rect)
+
+    def spawn_enemies(self):
+        pass

@@ -23,15 +23,12 @@ class HUD:
         pygame.draw.rect(screen, (255, 50, 50), (SCREEN_WIDTH - 222, SCREEN_HEIGHT - 38, health_width, 20))
 
         # Texto Vida
-        health_text = self.font.render(f"{int(self.player.health)}", True, (255, 255, 255))
+        health_text = self.font.render(f"{max(0, int(self.player.health))}", True, (255, 255, 255))
         screen.blit(health_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT -40))
 
         # Texto da arma
-        power_text = self.font.render(f"Arma: {self.player.current_power}", True, WHITE)
-        screen.blit(power_text, (10, 70))
-
-
-
+        #power_text = self.font.render(f"Arma: {self.player.current_power}", True, WHITE)
+        #screen.blit(power_text, (10, 70))
 
 
         # Adiciona indicador de estado de corrida

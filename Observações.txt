@@ -9,19 +9,17 @@ Atualizações sobre o jogo
 - Digão vai implementar o resto das GameScenes. No caso, sala inicial, com a porta para entrar no jogo, menu (já feito), 
 fight scene (em andamento), gameover-over, gameover-win
 - Digão vai implementar algumas linhas na tela que irão aparecer quando o personagem dá sprint
-
+- Fade in e out para as transições de gamescene
 
 - Maju vai construir a classe dos inimigos. 
-O bicho papão vai dar sprint sobre o jogador com cooldown.
-O médico vai atirar em direção ao jogador enquanto o circula.
-o alter ego do Ozak vai ser invencível e invariavelmente derrotará o Ozak quando entrar na fase, com vida 
-infinita e hit kill. 
+
 Implementaremos congelamento da tela por 3 segundos quando o jogador perder
 
-- Classes de gamescene, character e power_ball serão todas abstratas
-- Consertar as colisões dos characters com as boundaries
+- Classes de gamescene, power_ball serão todas abstratas
 
 
+- Iago vai implementar controle para que os personagens não fiquem sobrepostos com o player, só se aproximem
+até um determinado raio
 
 
 

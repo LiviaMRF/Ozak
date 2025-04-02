@@ -1,7 +1,7 @@
 from components.animation import *
 from settings import *
 from entities.character import Character
-from entities.power import Power, PowerBall
+from entities.power import Power
 
 class BichoPapao(Character):
     def __init__(self, pos, player):
@@ -77,7 +77,6 @@ class BichoPapao(Character):
             self.is_running=True
             self.time=0
         
-
     def _move_bicho_papao(self, dt):
 
         self._update_moving(dt)
@@ -91,9 +90,6 @@ class BichoPapao(Character):
             if self.direction.magnitude()>0:
                 self.direction = self.direction.normalize()
 
-            self.rect.x +=self.direction.x*self.speed*dt
-            self.rect.y +=self.direction.y*self.speed*dt
-            self.real_pos[0] +=self.direction.x*self.speed*dt
-            self.real_pos[1] +=self.direction.y*self.speed*dt
+            self._move_if_valid(dt)
 
 
