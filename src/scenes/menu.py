@@ -12,8 +12,8 @@ class MenuScene:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 from .game import GameScene
-                self.game.current_scene = GameScene(self.game)# Transição para o jogo
-                #self.game.current_scene = GameScene(self.game, "scene1")
+                #self.game.current_scene = GameScene(self.game)# Transição para o jogo
+                self.game.current_scene = GameScene(self.game, "scene1")
 
     def update(self, dt):
         pass  # Lógica de atualização do menu (animações, etc.)
