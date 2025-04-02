@@ -32,14 +32,14 @@ class BichoPapao(Character):
         self.cooldown = 0  
 
         # Sistema dos poderes
-        self.current_power = Power("brown") # Poder inicial
+        self.current_power = Power("brown", 500, 1) # Poder inicial
         self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
         self.time=0
         self.idle_time=5
         self.running_time=3
-        self.speed = 300
+        self.speed = 250
         self.is_running = False
         self.direction = pygame.math.Vector2()
         
@@ -49,6 +49,9 @@ class BichoPapao(Character):
         
         
     def update(self, dt):
+        
+        if self.health<0:
+            self.kill()
 
         # Atualiza o estado da animação
         if  self.is_running:

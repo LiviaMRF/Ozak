@@ -14,9 +14,9 @@ class GameScene:
         self.boundary_gp = pygame.sprite.GroupSingle()
         self.boundary_gp.add(self.boundary)
 
-
-        self.powers_gp = pygame.sprite.Group()
-        self.power_pickups = pygame.sprite.Group()
+        # Cria os grupos de poderes
+        self.power_player_gp = pygame.sprite.Group()
+        self.power_enemy_gp = pygame.sprite.Group()
 
         # Cria o jogador e o seu grupo
         self.player = Player()
@@ -75,11 +75,23 @@ class GameScene:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             power = self.player.unleash_power(pygame.mouse.get_pos())
             if power:
-                self.powers_gp.add(power)
+                self.power_player_gp.add(power)
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
                 self._try_enter_door()
+
+    def handle_collisions(self):
+        for enemy_power in self.power_enemy_gp:
+            if self.player.rect.colliderect(enemy_power.rect):
+                self.player.lose_health_points(enemy_power.damage)
+                enemy_power.kill()
+
+        for player_power in self.power_player_gp:
+            for enemy in self.enemies_gp:
+                if enemy.rect.colliderect(player_power.rect):
+                    enemy.lose_health_points(player_power.damage)
+                    player_power.kill()
 
 
     def update(self, dt):
@@ -87,9 +99,13 @@ class GameScene:
         self.sprite_shift = self.player.player_shift(dt)
         self.player_gp.update(dt)
         self.enemies_gp.update(dt)
-        self.powers_gp.update(dt)
+        self.power_player_gp.update(dt)
+        self.power_enemy_gp.update(dt)
 
         self.doors.update(dt)
+
+        self.handle_collisions()
+
         
 
     def _move_group_and_render(self, screen, group):
@@ -108,9 +124,10 @@ class GameScene:
         for enemy in self.enemies_gp:
             power = enemy.unleash_power(PLAYER_POSITION)
             if power:
-                self.powers_gp.add(power)
+                self.power_enemy_gp.add(power)
         
-        self._move_group_and_render(screen, self.powers_gp)
+        self._move_group_and_render(screen, self.power_player_gp)
+        self._move_group_and_render(screen, self.power_enemy_gp)
         self._move_group_and_render(screen, self.boundary_gp)
         self._move_group_and_render(screen, self.enemies_gp)
 
