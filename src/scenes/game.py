@@ -8,7 +8,7 @@ from entities.medico import Medico
 from entities.alter_ego import AlterEgo
 
 class GameScene:
-    def __init__(self, game, scene_name="default"):
+    def __init__(self, game, scene_name="scene1"):
         self.game = game
         self.bg_color = WHITE
         self.scene_time = 0
@@ -38,17 +38,13 @@ class GameScene:
         self.hud = HUD(self.player)
         self.font = pygame.font.Font(None, 36)
 
-
         self.scene_name = scene_name
 
         # Grupo de portas
         self.doors = pygame.sprite.Group()
 
         # Cria portas específicas para cada cena
-        if scene_name == "scene1":
-            self._create_scene1()
-        elif scene_name == "scene2":
-            self._create_scene2()
+        self._setup_doors(scene_name)
 
     def _create_scene1(self):
         door_pos = (SCREEN_WIDTH - 100, SCREEN_HEIGHT // 2 - 50)
@@ -60,13 +56,27 @@ class GameScene:
 
     def _try_enter_door(self):
         for door in self.doors:
-            # Calcula distância entre player e porta
-            distance = pygame.math.Vector2(self.player.rect.center).distance_to(door.rect.center)
-
-            if distance < door.interaction_radius:
-                from game import Game  # Importe circular
-                self.game.current_scene = GameScene(self.game, door.target_scene)
+            actual_pos = (
+                door.rect.x - self.sprite_shift[0],
+                door.rect.y - self.sprite_shift[1]
+            )
+            if pygame.math.Vector2(self.player.rect.center).distance_to(actual_pos) < door.interaction_radius:
+                self._change_scene(door.target_scene)
                 break
+
+    def _change_scene(self, target_scene):
+        # Efeito de fade out
+        for alpha in range(0, 255, 15):
+            fade_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            fade_surface.fill((0, 0, 0))
+            fade_surface.set_alpha(alpha)
+            self.render(self.game.screen)
+            self.game.screen.blit(fade_surface, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(30)
+
+        # Cria nova cena
+        self.game.current_scene = GameScene(self.game, target_scene)
 
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
@@ -108,23 +118,51 @@ class GameScene:
 
         if not self.player.is_dead:
             # Atualiza todos os sprites
+            self.doors.update()
             self.sprite_shift = self.player.player_shift(dt)
             self.player_gp.update(dt)
             self.enemies_gp.update(dt)
             self.power_player_gp.update(dt)
             self.power_enemy_gp.update(dt)
-            self.doors.update(dt)
             self.handle_collisions()
+
 
     def _move_group_and_render(self, screen, group):
         for element in group:
             element.rect.x -= self.sprite_shift[0]  # Aplica o offset
             element.rect.y -= self.sprite_shift[1]
         group.draw(screen)    
+    def _draw_with_offset(self, screen, group):
+        for sprite in group:
+            screen.blit(sprite.image, (sprite.rect.x - self.sprite_shift[0],
+                                       sprite.rect.y - self.sprite_shift[1]))
+
+    def _setup_doors(self, scene_name):
+        if not hasattr(self, 'doors'):
+            self.doors = pygame.sprite.Group()  # Cria o grupo se não existir
+
+        self.doors.empty()  # Limpa portas existentes
+
+        if scene_name == "scene1":
+            # Porta à direita que leva para cena 2
+            self.doors.add(Door(
+                boundary=self.boundary,
+                side="right",
+                target_scene="scene2"
+            ))
+        elif scene_name == "scene2":
+            # Porta à esquerda que leva para cena 1
+            self.doors.add(Door(
+                boundary=self.boundary,
+                side="left",
+                target_scene="scene1"
+            ))
+
+    def spawn_enemies(self):
+        pass
 
     def render(self, screen):
         if not self.player.is_dead:
-
             screen.fill(self.bg_color)
 
             # Renderiza o player com a sprite atual (idle ou run)
@@ -140,9 +178,12 @@ class GameScene:
             self._move_group_and_render(screen, self.boundary_gp)
             self._move_group_and_render(screen, self.enemies_gp)
 
+            self._draw_with_offset(screen, self.doors)
+            self._draw_with_offset(screen, self.player_gp)
+
             self.hud.draw(screen)
 
-            self.doors.draw(screen)
+            # self.doors.draw(screen)
             for door in self.doors:
                 pygame.draw.circle(screen, (255, 255, 0), door.rect.center, door.interaction_radius, 1)
 
@@ -152,5 +193,3 @@ class GameScene:
             for enemy in self.enemies_gp:
                 screen.blit(enemy.current_power.image, enemy.current_power.rect)
 
-    def spawn_enemies(self):
-        pass

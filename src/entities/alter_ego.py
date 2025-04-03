@@ -29,7 +29,7 @@ class AlterEgo(Character):
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
-        self.max_cooldown=0.5
+        self.max_cooldown = 300
         self.cooldown = 0  
 
         # Sistema dos poderes
@@ -37,7 +37,7 @@ class AlterEgo(Character):
         self.power_offset = pygame.math.Vector2(70, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
-        self.speed = 300
+        self.speed = 10
         self.direction = pygame.math.Vector2()
 
         # Sistema de vida
