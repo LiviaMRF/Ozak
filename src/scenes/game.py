@@ -1,3 +1,5 @@
+import pygame.font
+
 from entities.door import Door
 from entities.player import Player
 from settings import *
@@ -6,14 +8,18 @@ from entities.boundary import Boundary
 from entities.bicho_papao import BichoPapao
 from entities.medico import Medico
 from entities.alter_ego import AlterEgo
+from scenes.menu import MenuScene
+
 
 class GameScene:
-    def __init__(self, game, scene_name="scene1"):
+    def __init__(self, game, scene_name="scene1", change_status = True):
+
         self.game = game
         self.bg_color = WHITE
         self.scene_time = 0
 
-        self.boundary = Boundary()
+        # Cria a fronteira
+        self.boundary = Boundary() if change_status else self.game.current_scene.boundary
         self.boundary_gp = pygame.sprite.GroupSingle()
         self.boundary_gp.add(self.boundary)
 
@@ -22,23 +28,49 @@ class GameScene:
         self.power_enemy_gp = pygame.sprite.Group()
 
         # Cria o jogador e o seu grupo
-        self.player = Player()
+
+        # Arrumar para não resetar a vida e a stamina quando entrar na porta -- Feito
+
+        self.player = Player() if change_status else self.game.current_scene.player
+
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_gp.add(self.player)
 
         # Cria um grupo para os inimigos
-        self.enemies_gp = pygame.sprite.Group()
-        alterego = AlterEgo((200, 200), self.player)
-        self.enemies_gp.add(alterego)
+
+        #Arrumar para não resetar a vida e a stamina  quando entrar na porta -- feito
+        self.enemies_gp = pygame.sprite.Group() if change_status else self.game.current_scene.enemies_gp
+
+        # Only add enemies if creating a new scene
+        if change_status:
+            alterego = AlterEgo((200, 200), self.player)
+            self.enemies_gp.add(alterego)
 
         # Cria a SpriteShift
-        self.sprite_shift = (0,0)
+        self.sprite_shift = (0, 0)
 
         # Sistema de HUD
         self.hud = HUD(self.player)
-        self.font = pygame.font.Font(None, 36)
 
+        # Sistema para determinar a cena do jogo
         self.scene_name = scene_name
+
+        # Configurações para o menu de morte
+        self.death_timer = 2.0
+        self.death_animation_complete = False
+        self.show_death_menu = False
+
+        # Botões do menu de morte
+        self.font_large = pygame.font.SysFont('Arial', 72)
+        self.font_medium = pygame.font.SysFont('Arial', 48)
+        self.font_small = pygame.font.SysFont('Arial', 36)
+
+        button_width = 500
+        button_height = 60
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+
+        self.retry_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height)
+        self.menu_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 100, button_width, button_height)
 
         # Grupo de portas
         self.doors = pygame.sprite.Group()
@@ -46,13 +78,12 @@ class GameScene:
         # Cria portas específicas para cada cena
         self._setup_doors(scene_name)
 
-    def _create_scene1(self):
-        door_pos = (SCREEN_WIDTH - 100, SCREEN_HEIGHT // 2 - 50)
-        self.doors.add(Door(door_pos, "scene2"))
 
-    def _create_scene2(self):
-        door_pos = (50, SCREEN_HEIGHT // 2 - 50)
-        self.doors.add(Door(door_pos, "scene1"))
+        # Adicione as variáveis para controle da transição
+        self.transitioning = False
+        self.transition_alpha = 0
+        self.transition_speed = 3.5
+
 
     def _try_enter_door(self):
         for door in self.doors:
@@ -60,7 +91,8 @@ class GameScene:
                 door.rect.x - self.sprite_shift[0],
                 door.rect.y - self.sprite_shift[1]
             )
-            if pygame.math.Vector2(self.player.rect.center).distance_to(actual_pos) < door.interaction_radius:
+            if pygame.math.Vector2(self.player.rect.center).distance_to(actual_pos) < door.interaction_radius \
+                    and not self.player.is_moving:
                 self._change_scene(door.target_scene)
                 break
 
@@ -75,14 +107,37 @@ class GameScene:
             pygame.display.flip()
             pygame.time.delay(30)
 
+        self.sprite_shift = (0, 0)
+
+
         # Cria nova cena
-        self.game.current_scene = GameScene(self.game, target_scene)
+
+        self.game.current_scene = GameScene(self.game, target_scene, change_status = False)
+
+        self.game.current_scene.sprite_shift = (0, 0)
 
     def handle_events(self, event):
+        # Se o menu de morte estiver ativo, verifica cliques nos botões
+        if self.show_death_menu:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+
+                # Botão "Tentar Novamente"
+                if self.retry_button.collidepoint(mouse_pos):
+                    self.game.current_scene = GameScene(self.game, "scene1")
+
+                # Botão "Menu Principal"
+                # elif self.menu_button.collidepoint(mouse_pos):
+                #     self.game.current_scene = MenuScene(self.game)
+
+            return
+
+        # Processamento normal de eventos durante o jogo
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                from scenes.menu import MenuScene
                 self.game.current_scene = MenuScene(self.game)
+            elif event.key == pygame.K_e:
+                self._try_enter_door()
 
         # Dispara ao clicar com o botão esquerdo do mouse
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -90,31 +145,28 @@ class GameScene:
             if power:
                 self.power_player_gp.add(power)
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_e:
-                self._try_enter_door()
-
     def handle_collisions(self):
-
         for enemy_power in self.power_enemy_gp:
-            #if self.player.rect.colliderect(enemy_power.rect):
             if self.player.rect.colliderect(enemy_power.rect) \
-            and pygame.sprite.collide_mask(self.player, enemy_power):
-            
+                    and pygame.sprite.collide_mask(self.player, enemy_power):
                 self.player.lose_health_points(enemy_power.damage)
                 enemy_power.kill()
 
         for player_power in self.power_player_gp:
             for enemy in self.enemies_gp:
-                #if enemy.rect.colliderect(player_power.rect):
                 if enemy.rect.colliderect(player_power.rect) \
-                and pygame.sprite.collide_mask(enemy, player_power):
-
+                        and pygame.sprite.collide_mask(enemy, player_power):
                     enemy.lose_health_points(player_power.damage)
                     player_power.kill()
 
     def update(self, dt):
-        self.scene_time+=dt
+        if self.transitioning:
+            if self.transition_alpha > 0:
+                self.transition_alpha -= self.transition_speed
+                if self.transition_alpha <= 0:
+                    self.transitioning = False
+
+        self.scene_time += dt
 
         if not self.player.is_dead:
             # Atualiza todos os sprites
@@ -125,71 +177,138 @@ class GameScene:
             self.power_player_gp.update(dt)
             self.power_enemy_gp.update(dt)
             self.handle_collisions()
+        else:
+            # Gerencia animação de morte e exibição do menu
+            if not self.death_animation_complete:
+                self.death_timer -= dt
+                if self.death_timer <= 0:
+                    self.death_animation_complete = True
+                    self.show_death_menu = True
 
-
-    def _move_group_and_render(self, screen, group):
+    def _move_group_and_render(self, screen, group, apply_offset=True):
         for element in group:
-            element.rect.x -= self.sprite_shift[0]  # Aplica o offset
-            element.rect.y -= self.sprite_shift[1]
-        group.draw(screen)    
+            if apply_offset:
+                element.rect.x -= self.sprite_shift[0]
+                element.rect.y -= self.sprite_shift[1]
+        group.draw(screen)
+
     def _draw_with_offset(self, screen, group):
         for sprite in group:
             screen.blit(sprite.image, (sprite.rect.x - self.sprite_shift[0],
                                        sprite.rect.y - self.sprite_shift[1]))
 
     def _setup_doors(self, scene_name):
-        if not hasattr(self, 'doors'):
-            self.doors = pygame.sprite.Group()  # Cria o grupo se não existir
-
         self.doors.empty()  # Limpa portas existentes
 
         if scene_name == "scene1":
             # Porta à direita que leva para cena 2
-            self.doors.add(Door(
-                boundary=self.boundary,
-                side="right",
-                target_scene="scene2"
-            ))
+            self.doors.add(Door( self.boundary, "right","scene2"))
         elif scene_name == "scene2":
             # Porta à esquerda que leva para cena 1
-            self.doors.add(Door(
-                boundary=self.boundary,
-                side="left",
-                target_scene="scene1"
-            ))
+            self.doors.add(Door( self.boundary,"left","scene1"))
 
     def spawn_enemies(self):
         pass
 
+    def _render_death_menu(self, screen):
+        # Escurece a tela para o menu
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))  # Semi-transparente
+        screen.blit(overlay, (0, 0))
+
+        # Título "Você Morreu"
+        text = self.font_large.render("Você Morreu", True, RED)
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
+
+        # Botão "Tentar Novamente"
+        pygame.draw.rect(screen, BLACK, self.retry_button)
+        pygame.draw.rect(screen, WHITE, self.retry_button, 3)
+        retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
+        screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
+                                 self.retry_button.centery - retry_text.get_height() // 2))
+
+        # Botão "Menu Principal"
+        # pygame.draw.rect(screen, BLACK, self.menu_button)
+        # pygame.draw.rect(screen, WHITE, self.menu_button, 3)
+        # menu_text = self.font_medium.render("Menu Principal", True, WHITE)
+        # screen.blit(menu_text, (self.menu_button.centerx - menu_text.get_width() // 2,
+        #                         self.menu_button.centery - menu_text.get_height() // 2))
+
     def render(self, screen):
+
+        if self.transitioning:
+            transition_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            transition_surface.fill(BLACK)
+            transition_surface.set_alpha(self.transition_alpha)
+            screen.blit(transition_surface, (0, 0))
+
+        screen.fill(self.bg_color)
+
         if not self.player.is_dead:
-            screen.fill(self.bg_color)
-
-            # Renderiza o player com a sprite atual (idle ou run)
-            self.player_gp.draw(screen)
-
+            # Renderização normal do jogo
             for enemy in self.enemies_gp:
-                power = enemy.unleash_power(PLAYER_POSITION)
+                power = enemy.unleash_power(self.player.rect.center)
                 if power:
                     self.power_enemy_gp.add(power)
-            
+
             self._move_group_and_render(screen, self.power_player_gp)
             self._move_group_and_render(screen, self.power_enemy_gp)
             self._move_group_and_render(screen, self.boundary_gp)
             self._move_group_and_render(screen, self.enemies_gp)
 
             self._draw_with_offset(screen, self.doors)
-            self._draw_with_offset(screen, self.player_gp)
+
+            self._move_group_and_render(screen, self.player_gp, apply_offset=False)
 
             self.hud.draw(screen)
 
-            # self.doors.draw(screen)
             for door in self.doors:
-                pygame.draw.circle(screen, (255, 255, 0), door.rect.center, door.interaction_radius, 1)
+                door_center = (door.rect.centerx - self.sprite_shift[0],
+                               door.rect.centery - self.sprite_shift[1])
+                pygame.draw.circle(screen, (255, 255, 0), door_center, door.interaction_radius, 1)
 
             # Desenha o poder na posição correta
             screen.blit(self.player.current_power.image, self.player.current_power.rect)
-            
+
             for enemy in self.enemies_gp:
                 screen.blit(enemy.current_power.image, enemy.current_power.rect)
 
+        else:
+            # Renderização durante a morte do jogador
+            if not self.death_animation_complete:
+                # Animação de morte (efeito fade)
+                temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+                # Aplica efeito de escurecimento progressivo
+                alpha = min(255, int((1 - self.death_timer / 2.0) * 255))
+                darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+                darken.fill((100, 0, 0))  # Vermelho escuro
+                darken.set_alpha(alpha)
+
+                screen.blit(temp_surface, (0, 0))
+                screen.blit(darken, (0, 0))
+
+                # Texto "Você Morreu" durante a animação
+                font = self.font_large
+                text = font.render("Você Morreu", True, RED)
+                text_alpha = min(255, int(alpha * 1.5))  # Texto aparece mais rápido que o fundo
+                text.set_alpha(text_alpha)
+                screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
+                                   SCREEN_HEIGHT // 2 - text.get_height() // 2))
+
+                self.hud.draw(screen)
+
+            elif self.show_death_menu:
+                # Depois da animação, mostra o menu de morte
+                temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+                # Aplicar um efeito de desfoque/escurecimento
+                darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+                darken.fill((50, 0, 0))  # Vermelho muito escuro
+                darken.set_alpha(200)  # Bastante opaco
+
+                screen.blit(temp_surface, (0, 0))
+                screen.blit(darken, (0, 0))
+
+                # Renderiza o menu de morte
+                self._render_death_menu(screen)

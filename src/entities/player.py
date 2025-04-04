@@ -40,7 +40,7 @@ class Player(Character):
 
         # Sistema de vida
         self.health = 100
-        self.is_dead=False
+        self.is_dead = False
 
         # Sistema de estamina (barra azul do GDD)
         self.stamina = StaminaComponent(max_stamina=100, drain_rate=20, recover_rate=15)
@@ -49,9 +49,10 @@ class Player(Character):
         self.run_speed_multiplier = 1.8  # Velocidade ao correr
         self.base_speed = 300  # Velocidade normal
         self.is_running = False
+        self.is_moving = False
 
     def update(self, dt):
-        if self.health<0:
+        if self.health < 0:
             self.is_dead=True
             return 
 
@@ -72,19 +73,21 @@ class Player(Character):
         self._update_power_position(pygame.mouse.get_pos())
 
     def _handle_input(self):
+
+
         keys = pygame.key.get_pressed()
 
         # Movimento básico (WASD)
         self.direction.x = keys[pygame.K_d] - keys[pygame.K_a]
         self.direction.y = keys[pygame.K_s] - keys[pygame.K_w]
-        is_moving = self.direction.magnitude() > 0
+        self.is_moving = self.direction.magnitude() > 0
 
         # Normaliza diagonal
-        if is_moving:
+        if self.is_moving:
             self.direction = self.direction.normalize()
 
         # Corrida (Shift esquerdo) - Só corre se tiver estamina
-        self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and (not self.stamina.is_exhausted) and is_moving
+        self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and (not self.stamina.is_exhausted) and self.is_moving
 
     def player_shift(self, dt):
         if self.stamina.is_exhausted:
@@ -94,17 +97,17 @@ class Player(Character):
         # Não corre se acabar a estamina
         if not self.stamina.is_exhausted or not self.is_running:
             
-            shift_x=self.direction.x * speed * dt
+            shift_x = self.direction.x * speed * dt
             if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_pos[0]+shift_x \
                 or self.real_pos[0]+ shift_x + self.rect.width > (MAP_SCALE+1)*SCREEN_WIDTH/2:
 
-                shift_x=0
+                shift_x = 0
 
             shift_y = self.direction.y * speed * dt
             if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_pos[1]+shift_y \
                 or self.real_pos[1]+ shift_y + self.rect.height> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
                 
-                shift_y=0
+                shift_y = 0
         
             self.real_pos[0] += shift_x
             self.real_pos[1] += shift_y

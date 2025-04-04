@@ -2,7 +2,7 @@ import pygame
 from settings import *
 
 class Power(pygame.sprite.Sprite):
-    def __init__(self, power_type="pink", speed=500, damage=10, ini_pos=(0,0),):
+    def __init__(self, power_type="pink", speed=500, damage=100, ini_pos=(0,0),):
         super().__init__()
         self.power_type=power_type
         self.speed = speed
