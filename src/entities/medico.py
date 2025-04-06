@@ -4,7 +4,7 @@ from entities.character import Character
 from entities.power import Power
 
 class Medico(Character):
-    def __init__(self, pos, player):
+    def __init__(self, screen_pos, real_pos, player):
         super().__init__()
 
         # Cria referência ao personagem Ozak
@@ -18,8 +18,8 @@ class Medico(Character):
 
         # Configuração inicial
         self.image = self.idle_frames[0]
-        self.rect = self.image.get_rect(center=pos)
-        self.real_pos = list(self.rect.topleft)
+        self.rect = self.image.get_rect(center=screen_pos)
+        self.real_rect = self.image.get_rect(center=real_pos)
 
         # Sistema de animação
         self.current_animation = None
@@ -45,6 +45,18 @@ class Medico(Character):
         # Sistema de vida
         self.health = 30
         
+    def _move_medico(self, dt):
+
+        # Movimento básico do inimigo
+        self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+        self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+
+        self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)
+        if self.direction.magnitude()>0:
+            self.direction = self.direction.normalize()
+
+        self._move_if_valid(dt)
+
         
     def update(self, dt):
         
@@ -68,15 +80,4 @@ class Medico(Character):
 
 
         
-    def _move_medico(self, dt):
-
-        # Movimento básico do inimigo
-        self.direction.x = self.player.rect.center[0] - self.rect.center[0]
-        self.direction.y = self.player.rect.center[1] - self.rect.center[1]
-
-        self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)
-        self.direction = self.direction.normalize()
-
-        self._move_if_valid(dt)
-
-
+    

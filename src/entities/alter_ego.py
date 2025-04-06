@@ -5,7 +5,7 @@ from entities.character import Character
 
 
 class AlterEgo(Character):
-    def __init__(self, pos, player):
+    def __init__(self, screen_pos, real_pos, player):
         super().__init__()
 
         # Cria referência ao personagem Ozak
@@ -19,8 +19,9 @@ class AlterEgo(Character):
 
         # Configuração inicial
         self.image = self.idle_frames[0]
-        self.rect = self.image.get_rect(center=pos)
-        self.real_pos = list(self.rect.topleft)
+        self.rect = self.image.get_rect(center=screen_pos)
+        self.real_rect = self.image.get_rect(center=real_pos)
+
 
         # Sistema de animação
         self.current_animation = None

@@ -6,7 +6,7 @@ from entities.character import Character
 
 
 class Player(Character):
-    def __init__(self, pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)):
+    def __init__(self, screen_pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), real_pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)):
         super().__init__()
 
        # Carrega sprites
@@ -17,8 +17,9 @@ class Player(Character):
 
         # Configuração inicial
         self.image = self.idle_frames[0]
-        self.rect = self.image.get_rect(center=pos)
-        self.real_pos = list(self.rect.topleft)
+        self.rect = self.image.get_rect(center=screen_pos)
+        self.real_rect = self.image.get_rect(center=real_pos)
+
 
         # Sistema de animação
         self.current_animation = None
@@ -95,19 +96,25 @@ class Player(Character):
         if not self.stamina.is_exhausted or not self.is_running:
             
             shift_x=self.direction.x * speed * dt
-            if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_pos[0]+shift_x \
-                or self.real_pos[0]+ shift_x + self.rect.width > (MAP_SCALE+1)*SCREEN_WIDTH/2:
+            #if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_pos[0]+shift_x \
+            #    or self.real_pos[0]+ shift_x + self.rect.width > (MAP_SCALE+1)*SCREEN_WIDTH/2:
+
+            if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_rect.left+shift_x \
+                or self.real_rect.right+ shift_x > (MAP_SCALE+1)*SCREEN_WIDTH/2:
 
                 shift_x=0
 
             shift_y = self.direction.y * speed * dt
-            if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_pos[1]+shift_y \
-                or self.real_pos[1]+ shift_y + self.rect.height> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
-                
+            #if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_pos[1]+shift_y \
+            #    or self.real_pos[1]+ shift_y + self.rect.height> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
+
+            if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_rect.top+shift_y \
+                or self.real_rect.bottom+ shift_y > (MAP_SCALE+1)*SCREEN_HEIGHT/2:
+
                 shift_y=0
         
-            self.real_pos[0] += shift_x
-            self.real_pos[1] += shift_y
+            self.real_rect.x += shift_x
+            self.real_rect.y += shift_y
             return (shift_x, shift_y)
         
         return (0,0)

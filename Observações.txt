@@ -14,7 +14,7 @@ fight scene (em andamento), gameover-over, gameover-win
 - Melhorar o sistema de congelamento da tela após o jogador perder
 - Pensar em como vamos organizar o lugar de spawn dos vilões e o tempo para isso
 
-- Classes de gamescene, power_ball serão todas abstratas
+- Classes de GameScenes serão todas abstratas
 
 - Iago vai implementar controle para que os personagens não fiquem sobrepostos com o player, só se aproximem
 até um determinado raio

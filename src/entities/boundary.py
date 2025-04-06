@@ -9,6 +9,8 @@ class Boundary(pygame.sprite.Sprite):
         self.rect = pygame.Rect( -(MAP_SCALE-1)*SCREEN_WIDTH/2, -(MAP_SCALE-1)*SCREEN_HEIGHT/2, \
                                     MAP_SCALE*SCREEN_WIDTH, MAP_SCALE*SCREEN_HEIGHT)
         
+        self.real_rect = self.rect.copy()
+
         boundary_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
 
         # Cor do contorno (vermelho no exemplo, mas você pode escolher qualquer cor)

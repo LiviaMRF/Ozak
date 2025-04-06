@@ -4,7 +4,7 @@ from entities.power import Power, PowerBall
 from abc import ABC, abstractmethod
 
 class Character(pygame.sprite.Sprite, ABC):
-    def __init__(self, pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)):
+    def __init__(self, screen_pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), real_pos =(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)):
         super().__init__()
 
         # Carrega sprites
@@ -15,7 +15,9 @@ class Character(pygame.sprite.Sprite, ABC):
 
         # Configuração inicial
         self.image = self.idle_frames[0]
-        self.rect = self.image.get_rect(center=pos)
+        self.rect = self.image.get_rect(center=screen_pos)
+        self.real_rect = self.image.get_rect(center=real_pos)
+
 
         # Sistema de animação
         self.current_animation = None
@@ -48,8 +50,10 @@ class Character(pygame.sprite.Sprite, ABC):
             if direction.length() > 0:
                 # Posição do cano da arma
                 power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
-                real_power_ball_pos = self.real_pos + self.power_offset.rotate(-direction.angle_to((1, 0)))
+                real_power_ball_pos = self.real_rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
+
                 power_ball = PowerBall(self.current_power, power_ball_pos, real_power_ball_pos, direction)
+    
                 self.cooldown = self.max_cooldown
                 return power_ball
         return None
@@ -78,16 +82,20 @@ class Character(pygame.sprite.Sprite, ABC):
 
 
     def _move_if_valid(self, dt):
-        new_x = self.real_pos[0] + self.direction.x*self.speed*dt
-        new_y = self.real_pos[1] + self.direction.y*self.speed*dt
-        
-        if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= new_x and new_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
-            self.real_pos[0]=new_x
-            self.rect.x +=self.direction.x*self.speed*dt
-            
-        if (-(MAP_SCALE-1)*SCREEN_HEIGHT/2 <= new_y and new_y<= (MAP_SCALE+1)*SCREEN_HEIGHT/2):
-            self.real_pos[1]=new_y
-            self.rect.y +=self.direction.y*self.speed*dt
+
+        shift_x = self.direction.x*self.speed*dt
+        shift_y = self.direction.y*self.speed*dt
+
+    
+
+        if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
+            self.real_rect.x += shift_x
+            self.rect.x += shift_x
+
+        if (-(MAP_SCALE-1)*SCREEN_HEIGHT/2 <= self.real_rect.top+shift_y and self.real_rect.bottom+shift_y<= (MAP_SCALE+1)*SCREEN_HEIGHT/2):
+            self.real_rect.y += shift_y
+            self.rect.y += shift_y
+
 
     @abstractmethod
     def update(self, dt):
