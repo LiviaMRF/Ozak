@@ -11,8 +11,8 @@ class BichoPapao(Character):
         self.player = player
 
        # Carrega sprites
-        self.idle_frames = [load_sprite("enemies\doctor_0.png"),]
-        self.moving_frames = [load_sprite(f"enemies\doctor_0.png"),]
+        self.idle_frames = [load_sprite(f"enemies/doctor_0.png"),]
+        self.moving_frames = [load_sprite(f"enemies/doctor_0.png"),]
         self.moving_animation = Animation(self.moving_frames, speed=0.20)  # Velocidade da animação
         self.idle_animation = Animation(self.moving_frames, speed=0.10)  # Velocidade da animação
 
@@ -29,7 +29,7 @@ class BichoPapao(Character):
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
-        self.max_cooldown=1
+        self.max_cooldown = 15
         self.cooldown = 0  
 
         # Sistema dos poderes
@@ -37,10 +37,10 @@ class BichoPapao(Character):
         self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
-        self.time=0
-        self.idle_time=5
-        self.running_time=3
-        self.speed = 250
+        self.time = 0
+        self.idle_time = 5
+        self.running_time = 1
+        self.speed = 10
         self.is_running = False
         self.direction = pygame.math.Vector2()
         

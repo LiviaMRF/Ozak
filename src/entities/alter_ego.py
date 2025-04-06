@@ -30,7 +30,7 @@ class AlterEgo(Character):
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
-        self.max_cooldown=0.5
+        self.max_cooldown = 1
         self.cooldown = 0  
 
         # Sistema dos poderes
@@ -38,11 +38,11 @@ class AlterEgo(Character):
         self.power_offset = pygame.math.Vector2(70, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
-        self.speed = 300
+        self.speed = 100
         self.direction = pygame.math.Vector2()
 
         # Sistema de vida
-        self.health = 1000
+        self.health = 50
 
     def update(self, dt):
 
@@ -61,9 +61,15 @@ class AlterEgo(Character):
         # Atualiza posição do poder
         self._update_power_position(PLAYER_POSITION)
 
+
+        # Falta implementar a morte do inimigo
+        # print(str(self.health))
+
+
     def _move_alter_ego(self, dt):
 
         # Movimento básico do inimigo
+
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
         self.direction.y = self.player.rect.center[1] - self.rect.center[1]
 

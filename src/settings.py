@@ -1,6 +1,16 @@
-import os
 import pygame
 from pygame.image import load
+
+# Cores básicas
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+CYAN = (0, 255, 255)
+MAGENTA = (255, 0, 255)
+GRAY = (128, 128, 128)
 
 def load_sprite(name, scale=1, convert_alpha=True):
     path = os.path.join(ASSETS_PATH, "images", name)
@@ -16,11 +26,6 @@ SCREEN_HEIGHT = 720
 PLAYER_POSITION=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 MAP_SCALE=1
 FPS = 60
-
-# Cores
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
 
 # Caminhos de assets
 import os

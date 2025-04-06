@@ -24,9 +24,9 @@ class Boundary(pygame.sprite.Sprite):
 
         # Ajustamos as coordenadas porque estamos desenhando na Surface, não na tela
         drawing_rect = pygame.Rect(
-            border_width, 
-            border_width, 
-            self.rect.width - 2*border_width, 
+            border_width,
+            border_width,
+            self.rect.width - 2*border_width,
             self.rect.height - 2*border_width
         )
 

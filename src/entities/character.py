@@ -39,10 +39,15 @@ class Character(pygame.sprite.Sprite, ABC):
         
         # Sistema de vida
         self.health = 100
-    
+        self.is_dead = False
+
 
     def lose_health_points(self, damage):
         self.health-=damage
+
+        if self.health == 0:
+            self.is_dead = True
+
     
     def unleash_power(self, obj_pos):
         if self.cooldown <= 0 and self.current_power.image:
