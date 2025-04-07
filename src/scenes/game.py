@@ -9,7 +9,7 @@ from entities.bicho_papao import BichoPapao
 from entities.medico import Medico
 from entities.alter_ego import AlterEgo
 from scenes.menu import MenuScene
-
+from entities.power import Power
 
 class GameScene:
     def __init__(self, game, scene_name="scene1", change_status = True):
@@ -29,9 +29,11 @@ class GameScene:
 
         # Cria o jogador e o seu grupo
 
-        # Arrumar para não resetar a vida e a stamina quando entrar na porta -- Feito
-
-        self.player = Player() if change_status else self.game.current_scene.player
+        self.player = Player(max_stamina=100, drain_rate=20, recover_rate=15, run_speed_multiplier = 1.8, 
+                            screen_pos = PLAYER_POSITION, real_pos = PLAYER_POSITION, idle_frames=["player\ozak_dead.png"],
+                            idle_animation_speed=0.15, moving_frames=["player\ozak_dead.png"], moving_animation_speed=0.15,
+                            max_cooldown=0.2, power_type = "brown", power_speed=500, power_damage=10,
+                            base_speed=300, health=100, sprite_scale=1) if change_status else self.game.current_scene.player
 
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_gp.add(self.player)
@@ -44,9 +46,15 @@ class GameScene:
         # Only add enemies if creating a new scene
         if change_status:
             screen_pos_spawn = [200,200]
-            real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0], screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
-            alterego = AlterEgo(tuple(screen_pos_spawn), tuple(real_pos_spawn), self.player)
-            self.enemies_gp.add(alterego)
+            real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0],
+                               screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
+            enemy = Medico(player=self.player, ratio_radial_to_tangential_speed = 0.15, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn), 
+                            idle_frames=["player\ozak_dead.png"], idle_animation_speed=0.10, 
+                            moving_frames=["player\ozak_dead.png"], moving_animation_speed=0.20,
+                            max_cooldown=0.7, power_type = "brown", power_speed=500, power_damage=1, base_speed=250, health=30, sprite_scale=1)
+        
+
+            self.enemies_gp.add(enemy)
 
         # Cria a SpriteShift
         self.sprite_shift = (0, 0)

@@ -3,51 +3,45 @@ from settings import *
 from entities.character import Character
 from entities.power import Power
 
+
 class BichoPapao(Character):
-    def __init__(self, screen_pos, real_pos, player):
-        super().__init__()
+    def __init__(self, player, idle_time=3, running_time=2, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Cria referência ao personagem Ozak
         self.player = player
-
-       # Carrega sprites
-        self.idle_frames = [load_sprite(f"enemies/doctor_0.png"),]
-        self.moving_frames = [load_sprite(f"enemies/doctor_0.png"),]
-        self.moving_animation = Animation(self.moving_frames, speed=0.20)  # Velocidade da animação
-        self.idle_animation = Animation(self.moving_frames, speed=0.10)  # Velocidade da animação
-
-        # Configuração inicial
-        self.image = self.idle_frames[0]
-        self.rect = self.image.get_rect(center=screen_pos)
-        self.real_rect = self.image.get_rect(center=real_pos)
-
-
-        # Sistema de animação
-        self.current_animation = None
-        self.current_sprite = None
-        self.animation_speed = 0.15
-        self.current_frame = 0
-
-        # Cooldown para poder lançar poder
-        self.max_cooldown = 15
-        self.cooldown = 0  
-
-        # Sistema dos poderes
-        self.current_power = Power("brown", 500, 1) # Poder inicial
-        self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
-
-        # Atributos de movimento
-        self.time = 0
-        self.idle_time = 5
-        self.running_time = 1
-        self.speed = 10
+        
+        # Atributos extras de movimento
+        self.auto_timer = 0
+        self.idle_time = idle_time
+        self.running_time = running_time
         self.is_running = False
         self.direction = pygame.math.Vector2()
         
 
-        # Sistema de vida
-        self.health = 30
-        
+    def _update_moving(self, dt):
+        self.auto_timer += dt
+        if self.is_running and self.auto_timer > self.running_time:
+            self.is_running=False
+            self.auto_timer=0
+        if not self.is_running and self.auto_timer > self.idle_time:
+            self.is_running=True
+            self.auto_timer=0
+    
+    def _move_bicho_papao(self, dt):
+
+        self._update_moving(dt)
+
+        if self.is_running:
+
+            # Movimento básico do inimigo
+            self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+            self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+
+            if self.direction.magnitude()>0:
+                self.direction = self.direction.normalize()
+
+            self._move_if_valid(dt)
         
     def update(self, dt):
         
@@ -69,28 +63,6 @@ class BichoPapao(Character):
         # Atualiza posição do poder
         self._update_power_position(PLAYER_POSITION)
 
-    def _update_moving(self, dt):
-        self.time += dt
-        if self.is_running and self.time > self.running_time:
-            self.is_running=False
-            self.time=0
-        if not self.is_running and self.time > self.idle_time:
-            self.is_running=True
-            self.time=0
-        
-    def _move_bicho_papao(self, dt):
 
-        self._update_moving(dt)
-
-        if self.is_running:
-
-            # Movimento básico do inimigo
-            self.direction.x = self.player.rect.center[0] - self.rect.center[0]
-            self.direction.y = self.player.rect.center[1] - self.rect.center[1]
-
-            if self.direction.magnitude()>0:
-                self.direction = self.direction.normalize()
-
-            self._move_if_valid(dt)
 
 

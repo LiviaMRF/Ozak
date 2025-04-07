@@ -4,41 +4,51 @@ from entities.power import Power, PowerBall
 from abc import ABC, abstractmethod
 
 class Character(pygame.sprite.Sprite, ABC):
-    def __init__(self, screen_pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), real_pos =(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)):
+    def __init__(self, screen_pos, real_pos, idle_frames=["player\ozak_dead.png"], idle_animation_speed=0.15,
+                moving_frames=["player\ozak_dead.png"], moving_animation_speed=0.15,
+                max_cooldown=0.2, power_type = "brown", power_speed=500, power_damage=10,
+                base_speed=300, health=100, sprite_scale=1):
         super().__init__()
 
-        # Carrega sprites
-        self.idle_frames = [load_sprite("player/ozak_dead.png"),]
-        self.moving_frames = [load_sprite(f"player/ozak_dead.png"),]
-        self.moving_animation = Animation(self.moving_frames, speed=0.15)  # Velocidade da animação
-        self.idle_animation = Animation(self.moving_frames, speed=0.15)  # Velocidade da animação
+        # Carrega sprites e animações
+        self.idle_frames = []
+        
+        for frame in idle_frames:
+            self.idle_frames.append(load_sprite(frame, sprite_scale))
 
-        # Configuração inicial
+        self.moving_frames = []
+
+        for frame in moving_frames:
+            self.moving_frames.append(load_sprite(frame, sprite_scale))
+
+        self.moving_animation = Animation(self.moving_frames, moving_animation_speed)  
+        self.idle_animation = Animation(self.moving_frames, idle_animation_speed)  
+
+        # Configuração inicial dos sprites
         self.image = self.idle_frames[0]
         self.rect = self.image.get_rect(center=screen_pos)
         self.real_rect = self.image.get_rect(center=real_pos)
 
-
         # Sistema de animação
         self.current_animation = None
         self.current_sprite = None
-        self.animation_speed = 0.15
         self.current_frame = 0
 
         # Cooldown para poder lançar poder
-        self.max_cooldown=0.2
+        self.max_cooldown=max_cooldown
         self.cooldown = 0  
 
         # Sistema dos poderes
-        self.current_power = Power() # Poder inicial
-        self.power_offset = pygame.math.Vector2(30, 0) # Posição relativa ao personagem
+        self.current_power = Power(power_type, power_speed, power_damage)
+        self.power_offset = pygame.math.Vector2(30*sprite_scale, 0) # Posição relativa ao personagem
 
         # Atributos de movimento
-        self.speed = 300
+        self.speed = base_speed
+        self.base_speed = base_speed
         self.direction = pygame.math.Vector2()
         
         # Sistema de vida
-        self.health = 100
+        self.health = health
         self.is_dead = False
 
 
@@ -48,7 +58,6 @@ class Character(pygame.sprite.Sprite, ABC):
         if self.health == 0:
             self.is_dead = True
 
-    
     def unleash_power(self, obj_pos):
         if self.cooldown <= 0 and self.current_power.image:
             direction = pygame.math.Vector2(obj_pos) - pygame.math.Vector2(self.rect.center)
@@ -85,13 +94,9 @@ class Character(pygame.sprite.Sprite, ABC):
         self.current_power.image = pygame.transform.rotate(load_sprite(f"powers/{self.current_power.power_type}.png", scale=0.3), angle)
         self.current_power.rect = self.current_power.image.get_rect(center=power_pos)
 
-
     def _move_if_valid(self, dt):
-
         shift_x = self.direction.x*self.speed*dt
         shift_y = self.direction.y*self.speed*dt
-
-    
 
         if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
             self.real_rect.x += shift_x
@@ -105,3 +110,4 @@ class Character(pygame.sprite.Sprite, ABC):
     @abstractmethod
     def update(self, dt):
         pass
+
