@@ -43,8 +43,8 @@ class GameScene:
 
         # Only add enemies if creating a new scene
         if change_status:
-        screen_pos_spawn = [200,200]
-        real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0], screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
+            screen_pos_spawn = [200,200]
+            real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0], screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
             alterego = AlterEgo(tuple(screen_pos_spawn), tuple(real_pos_spawn), self.player)
             self.enemies_gp.add(alterego)
 
