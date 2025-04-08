@@ -4,8 +4,8 @@ from entities.power import Power, PowerBall
 from abc import ABC, abstractmethod
 
 class Character(pygame.sprite.Sprite, ABC):
-    def __init__(self, screen_pos, real_pos, idle_frames=["player\ozak_dead.png"], idle_animation_speed=0.15,
-                moving_frames=["player\ozak_dead.png"], moving_animation_speed=0.15,
+    def __init__(self, screen_pos, real_pos, idle_frames=["player"+os.sep+"ozak_dead.png"], idle_animation_speed=0.15,
+                moving_frames=["player"+os.sep+"ozak_dead.png"], moving_animation_speed=0.15,
                 max_cooldown=0.2, power_type = "brown", power_speed=500, power_damage=10,
                 base_speed=300, health=100, sprite_scale=1):
         super().__init__()

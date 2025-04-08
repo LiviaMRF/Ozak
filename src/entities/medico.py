@@ -18,7 +18,7 @@ class Medico(Character):
         
     def _move_if_valid(self, dt):
         #precisamos afinar essa constante v_random
-        v_rand=self.speed/3
+        v_rand=self.speed*3
         x_rand=random.uniform(-1, 1)#escolhemos 2 floats aleatorios entre -1 e 1
         y_rand=random.uniform(-1, 1)
 
@@ -27,7 +27,7 @@ class Medico(Character):
         x_rand=x_rand/norma
         y_rand=y_rand/norma
 
-        shift_x = (self.direction.x*self.speed +x_rand*v_rand)*dt
+        shift_x = (self.direction.x*self.speed +x_rand*v_rand)*dt#Assim está muito ruim, precisamos aumentar o intervalo entre os sorteios
         shift_y = (self.direction.y*self.speed +y_rand*v_rand)*dt
 
         if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
