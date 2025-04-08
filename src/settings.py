@@ -13,8 +13,8 @@ MAGENTA = (255, 0, 255)
 GRAY = (128, 128, 128)
 
 def load_sprite(name, scale=1, convert_alpha=True):
-    path = os.path.join(ASSETS_PATH, "images", name)
-    sprite = load(path)
+    path = os.path.join(ASSETS_PATH, "images", name)#isso aqui tá fazendo o join com \ ao invés de / e isso 
+    sprite = load(path)                             #da erro pra usuarios de linux
     sprite = sprite.convert_alpha() if convert_alpha else sprite.convert()
     return pygame.transform.scale_by(sprite, scale)
 
