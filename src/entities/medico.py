@@ -7,9 +7,9 @@ import random
 
 class Medico(Character):
     auto_timer=0
-    random_speed_buffer=[0, 0]
     def __init__(self, player, ratio_radial_to_tangential_speed = 0.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.random_speed_buffer=[0, 0]
 
         # Cria referência ao personagem Ozak
         self.player = player
@@ -24,7 +24,7 @@ class Medico(Character):
             self.auto_timer=0
             #self.random_speed_buffer_current=self.random_speed_buffer_next
             #precisamos afinar essa constante v_random
-            v_rand=self.speed*1/2
+            v_rand=self.speed*1
             x_rand=random.uniform(-1, 1)#escolhemos 2 floats aleatorios entre -1 e 1
             y_rand=random.uniform(-1, 1)
 
@@ -55,11 +55,11 @@ class Medico(Character):
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
         self.direction.y = self.player.rect.center[1] - self.rect.center[1]
         direction=self.direction.magnitude()
-        #self.direction=self.direction*( (direction-D)/direction )
+        self.direction=self.direction*( (direction-D)/direction )
 
         if(direction-D < 0):
             
-            self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)*10
+            self.direction = self.direction*self.ratio_radial_to_tangential_speed*10 + pygame.math.Vector2(-self.direction.y, self.direction.x)
         
         else:
             self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)

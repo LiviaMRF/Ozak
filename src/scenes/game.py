@@ -58,6 +58,32 @@ class GameScene:
                 max_cooldown=1, power_type = "bichopapao", power_speed=500, power_damage=1, base_speed=300, health=30, sprite_scale=1)
             self.enemies_gp.add(enemy)
 
+            screen_pos_spawn = [200,200]
+            real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0],
+            screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
+            enemy = Medico(player=self.player, ratio_radial_to_tangential_speed = 0.15, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn), 
+            idle_frames=[], idle_animation_speed=0.10, 
+            moving_frames=[f"enemies{os.sep}medico_andando_{idx}.png" for idx in range(0,4)], moving_animation_speed=0.20,
+            max_cooldown=0.7, power_type = "medico", power_speed=500, power_damage=1, base_speed=250, health=300, sprite_scale=1)
+            self.enemies_gp.add(enemy)
+
+            screen_pos_spawn = [200,200]
+            real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0],
+            screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
+            enemy = Medico(player=self.player, ratio_radial_to_tangential_speed = 0.15, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn), 
+            idle_frames=[], idle_animation_speed=0.10, 
+            moving_frames=[f"enemies{os.sep}medico_andando_{idx}.png" for idx in range(0,4)], moving_animation_speed=0.20,
+            max_cooldown=0.7, power_type = "medico", power_speed=500, power_damage=1, base_speed=250, health=300, sprite_scale=1)
+            self.enemies_gp.add(enemy)
+
+            screen_pos_spawn = [200,200]
+            real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0],
+            screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
+            enemy = Medico(player=self.player, ratio_radial_to_tangential_speed = 0.15, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn), 
+            idle_frames=[], idle_animation_speed=0.10, 
+            moving_frames=[f"enemies{os.sep}medico_andando_{idx}.png" for idx in range(0,4)], moving_animation_speed=0.20,
+            max_cooldown=0.7, power_type = "medico", power_speed=500, power_damage=1, base_speed=250, health=300, sprite_scale=1)
+            self.enemies_gp.add(enemy)
         # Cria a SpriteShift
         self.sprite_shift = (0, 0)
 
