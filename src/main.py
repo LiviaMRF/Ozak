@@ -4,7 +4,6 @@ from scenes.game import GameScene
 from settings import *
 from scenes.menu import MenuScene
 
-
 class Game:
     def __init__(self):
         pygame.init()
