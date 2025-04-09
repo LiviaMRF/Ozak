@@ -7,10 +7,7 @@ import random
 
 class Medico(Character):
     auto_timer=0;
-    random_speed_buffer_first=[0, 0]
-    random_speed_buffer_current=[0,0]
-    random_speed_buffer_next=[0, 0]
-    acceleration=[0, 0]
+    random_speed_buffer=[0, 0]
     def __init__(self, player, ratio_radial_to_tangential_speed = 0.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -25,10 +22,9 @@ class Medico(Character):
         intervalo_tempo=0.5
         if(self.auto_timer > intervalo_tempo):#refinemos essa constante 1
             self.auto_timer=0
-            self.random_speed_buffer_first=self.random_speed_buffer_next
             #self.random_speed_buffer_current=self.random_speed_buffer_next
             #precisamos afinar essa constante v_random
-            v_rand=self.speed*5
+            v_rand=self.speed*1/2
             x_rand=random.uniform(-1, 1)#escolhemos 2 floats aleatorios entre -1 e 1
             y_rand=random.uniform(-1, 1)
 
@@ -36,17 +32,12 @@ class Medico(Character):
             norma= pow(x_rand*x_rand + y_rand*y_rand, 0.5)
             x_rand=x_rand/norma
             y_rand=y_rand/norma
-            self.random_speed_buffer_next[0]=x_rand*v_rand
-            self.random_speed_buffer_next[1]=y_rand*v_rand
+            self.random_speed_buffer[0]=x_rand*v_rand
+            self.random_speed_buffer[1]=y_rand*v_rand
 
-            self.acceleration[0]=(self.random_speed_buffer_next[0] - self.random_speed_buffer_first[0])/intervalo_tempo
-            self.acceleration[1]=(self.random_speed_buffer_next[1] - self.random_speed_buffer_first[1])/intervalo_tempo
 
-        self.random_speed_buffer_current[0]=self.random_speed_buffer_current[0] + (self.acceleration[0])*dt
-        self.random_speed_buffer_current[1]=self.random_speed_buffer_current[1] + (self.acceleration[1])*dt
-        
-        shift_x = (self.direction.x*self.speed +self.random_speed_buffer_current[0])*dt
-        shift_y = (self.direction.y*self.speed +self.random_speed_buffer_current[1])*dt
+        shift_x = (self.direction.x*self.speed +self.random_speed_buffer[0])*dt
+        shift_y = (self.direction.y*self.speed +self.random_speed_buffer[1])*dt
 
         if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
             self.real_rect.x += shift_x
