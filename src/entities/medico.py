@@ -49,14 +49,21 @@ class Medico(Character):
 
     def _move_medico(self, dt):
 
-        D=0.4
+        D=500
         self.auto_timer+=dt;
         # Movimento básico do médico
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
         self.direction.y = self.player.rect.center[1] - self.rect.center[1]
-        self.direction*=((self.direction.magnitude()-D)/(self.direction.magnitude()))
+        direction=self.direction.magnitude()
+        #self.direction=self.direction*( (direction-D)/direction )
 
-        self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)
+        if(direction-D < 0):
+            
+            self.direction = -self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)
+        
+        else:
+            self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)
+
         if self.direction.magnitude()>0:
             self.direction = self.direction.normalize()
 
