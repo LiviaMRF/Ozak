@@ -38,5 +38,8 @@ class Door(pygame.sprite.Sprite):
                 centery=self.boundary.rect.centery
             )
 
+    def get_rect(self):
+        return self.rect.copy()
+
     def update(self):
         self._reposition()

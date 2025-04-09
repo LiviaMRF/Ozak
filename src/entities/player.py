@@ -16,18 +16,25 @@ class Player(Character):
         self.is_running = False
         self.is_moving = False
 
+        # Animação de corrida
+        self.running_animation = Animation(self.moving_frames, self.moving_animation_speed/2)  
+
+
     def update(self, dt):
         if self.health < 0:
             self.is_dead=True
             return
 
         # Atualiza o estado da animação
-        if  self.is_running and self.direction.magnitude() > 0:
+        if  self.is_running:
+            self.running_animation.update(dt)
+            self.image = self.running_animation.current_image()
+        elif self.is_moving:
             self.moving_animation.update(dt)
-            self.current_sprite = self.moving_animation.current_image()
+            self.image = self.moving_animation.current_image()
         else:
             self.idle_animation.update(dt)
-            self.current_sprite = self.idle_animation.current_image()
+            self.image = self.idle_animation.current_image()
 
         # Atualiza movimento com input
         self._handle_input()
@@ -35,7 +42,7 @@ class Player(Character):
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza posição do poder
-        self._update_power_position(pygame.mouse.get_pos())
+        self._update_angular_position(pygame.mouse.get_pos())
 
     def _handle_input(self):
 
