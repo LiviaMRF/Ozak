@@ -49,7 +49,7 @@ class Medico(Character):
 
     def _move_medico(self, dt):
 
-        D=70
+        D=70.02
         self.auto_timer+=dt;
         # Movimento básico do médico
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
