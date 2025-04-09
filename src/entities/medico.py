@@ -6,7 +6,7 @@ import random
 
 
 class Medico(Character):
-    auto_timer=0;
+    auto_timer=0
     random_speed_buffer=[0, 0]
     def __init__(self, player, ratio_radial_to_tangential_speed = 0.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,7 +50,7 @@ class Medico(Character):
     def _move_medico(self, dt):
 
         D=0.4
-        self.auto_timer+=dt;
+        self.auto_timer+=dt
         # Movimento básico do médico
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
         self.direction.y = self.player.rect.center[1] - self.rect.center[1]
