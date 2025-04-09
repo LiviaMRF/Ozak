@@ -58,12 +58,12 @@ class Medico(Character):
 
         # Atualiza o estado da animação
         self.moving_animation.update(dt)
-        self.current_sprite = self.moving_animation.current_image()
+        self.image = self.moving_animation.current_image()
 
         # Atualiza dooldown e move o médico
         self._move_medico(dt)
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza posição do poder
-        self._update_power_position(PLAYER_POSITION)
+        self._update_angular_position(PLAYER_POSITION)
 

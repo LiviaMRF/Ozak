@@ -11,6 +11,9 @@ class Character(pygame.sprite.Sprite, ABC):
         super().__init__()
 
         # Carrega sprites e animações
+        self.moving_animation_speed = moving_animation_speed
+        self.idle_animation_speed = idle_animation_speed
+
         self.idle_frames = []
         
         for frame in idle_frames:
@@ -20,20 +23,16 @@ class Character(pygame.sprite.Sprite, ABC):
 
         for frame in moving_frames:
             self.moving_frames.append(load_sprite(frame, sprite_scale))
-
+        
         self.moving_animation = Animation(self.moving_frames, moving_animation_speed)  
-        self.idle_animation = Animation(self.moving_frames, idle_animation_speed)  
+        self.idle_animation = Animation(self.idle_frames, idle_animation_speed)  
 
         # Configuração inicial dos sprites
-        self.image = self.idle_frames[0]
+        self.image = self.moving_frames[0]
         self.rect = self.image.get_rect(center=screen_pos)
         self.real_rect = self.image.get_rect(center=real_pos)
 
-        # Sistema de animação
-        self.current_animation = None
-        self.current_sprite = None
-        self.current_frame = 0
-
+        
         # Cooldown para poder lançar poder
         self.max_cooldown=max_cooldown
         self.cooldown = 0  
@@ -72,7 +71,7 @@ class Character(pygame.sprite.Sprite, ABC):
                 return power_ball
         return None
 
-    def _update_power_position(self, target_pos):
+    def _update_angular_position(self, target_pos):
         # Calcula a direção do character até o cursor
         direction = pygame.math.Vector2(target_pos) - pygame.math.Vector2(self.rect.center)
 
@@ -91,8 +90,11 @@ class Character(pygame.sprite.Sprite, ABC):
         power_pos = pygame.math.Vector2(power_center) + rotated_offset
 
         # Atualiza a posição e a rotação da arma
-        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers/{self.current_power.power_type}.png", scale=0.3), angle)
+        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers{os.sep}power_{self.current_power.power_type}_0.png",
+                                                                        scale= self.current_power.sprite_scale), angle)
         self.current_power.rect = self.current_power.image.get_rect(center=power_pos)
+        self.image = pygame.transform.rotate(self.image, -angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
 
     def _move_if_valid(self, dt):
         shift_x = self.direction.x*self.speed*dt

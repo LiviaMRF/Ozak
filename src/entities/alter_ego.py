@@ -18,7 +18,7 @@ class AlterEgo(Character):
         
         # Atualiza o estado da animação
         self.moving_animation.update(dt)
-        self.current_sprite = self.moving_animation.current_image()
+        self.image = self.moving_animation.current_image()
 
         self._move_alter_ego(dt)
 
@@ -26,7 +26,7 @@ class AlterEgo(Character):
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza posição do poder
-        self._update_power_position(PLAYER_POSITION)
+        self._update_angular_position(PLAYER_POSITION)
 
 
     def _move_alter_ego(self, dt):

@@ -51,17 +51,17 @@ class BichoPapao(Character):
         # Atualiza o estado da animação
         if  self.is_running:
             self.moving_animation.update(dt)
-            self.current_sprite = self.moving_animation.current_image()
+            self.image = self.moving_animation.current_image()
         else:
             self.idle_animation.update(dt)
-            self.current_sprite = self.idle_animation.current_image()
+            self.image = self.idle_animation.current_image()
 
         # Atualiza lógica
         self._move_bicho_papao(dt)
         self.cooldown = max(0, self.cooldown - dt)
 
         # Atualiza posição do poder
-        self._update_power_position(PLAYER_POSITION)
+        self._update_angular_position(PLAYER_POSITION)
 
 
 

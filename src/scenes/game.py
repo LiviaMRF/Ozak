@@ -9,14 +9,19 @@ from entities.bicho_papao import BichoPapao
 from entities.medico import Medico
 from entities.alter_ego import AlterEgo
 from scenes.menu import MenuScene
+from scenes.musical_video import MusicalVideo
 from entities.power import Power
+
 
 class GameScene:
     def __init__(self, game, scene_name="scene1", change_status = True):
 
         self.game = game
-        self.bg_color = WHITE
         self.scene_time = 0
+
+        # Inicializa vídeo e música
+        self.musical_video=MusicalVideo()
+      
 
         # Cria a fronteira
         self.boundary = Boundary() if change_status else self.game.current_scene.boundary
@@ -29,18 +34,17 @@ class GameScene:
 
         # Cria o jogador e o seu grupo
 
+
         self.player = Player(max_stamina=100, drain_rate=20, recover_rate=15, run_speed_multiplier = 1.8, 
-                            screen_pos = PLAYER_POSITION, real_pos = PLAYER_POSITION, idle_frames=["player"+os.sep+"ozak_dead.png"],
-                            idle_animation_speed=0.15, moving_frames=["player"+os.sep+"ozak_dead.png"], moving_animation_speed=0.15,
-                            max_cooldown=0.2, power_type = "brown", power_speed=500, power_damage=10,
-                            base_speed=300, health=100, sprite_scale=1) if change_status else self.game.current_scene.player
+                            screen_pos = PLAYER_POSITION, real_pos = PLAYER_POSITION, idle_frames=[f"player{os.sep}ozak_parado_{idx}.png" for idx in range(0,2) ],
+                            idle_animation_speed=0.3, moving_frames=[f"player{os.sep}ozak_andando_{idx}.png" for idx in range(0,4) ], moving_animation_speed=0.25,
+                            max_cooldown=0.2, power_type = "ozak", power_speed=500, power_damage=10,
+                            base_speed=300, health=10000, sprite_scale=1) if change_status else self.game.current_scene.player
 
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_gp.add(self.player)
 
         # Cria um grupo para os inimigos
-
-        #Arrumar para não resetar a vida e a stamina  quando entrar na porta -- feito
         self.enemies_gp = pygame.sprite.Group() if change_status else self.game.current_scene.enemies_gp
 
         # Only add enemies if creating a new scene
@@ -48,12 +52,10 @@ class GameScene:
             screen_pos_spawn = [200,200]
             real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0],
                                screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
-            enemy = Medico(player=self.player, ratio_radial_to_tangential_speed = 0.15, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn), 
-                            idle_frames=["player"+os.sep+"ozak_dead.png"], idle_animation_speed=0.10, 
-                            moving_frames=["player"+os.sep+"ozak_dead.png"], moving_animation_speed=0.20,
-                            max_cooldown=0.7, power_type = "brown", power_speed=500, power_damage=1, base_speed=250, health=30, sprite_scale=1)
-        
-
+            enemy = BichoPapao(player=self.player, idle_time=3, running_time=2, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn), 
+                idle_frames=[f"enemies{os.sep}bichopapao_parado_{idx}.png" for idx in range(0,2)], idle_animation_speed=0.10, 
+                moving_frames=[f"enemies{os.sep}bichopapao_andando_{idx}.png" for idx in range(0,4)], moving_animation_speed=0.20,
+                max_cooldown=1, power_type = "bichopapao", power_speed=500, power_damage=1, base_speed=300, health=30, sprite_scale=1)
             self.enemies_gp.add(enemy)
 
         # Cria a SpriteShift
@@ -252,7 +254,8 @@ class GameScene:
             transition_surface.set_alpha(self.transition_alpha)
             screen.blit(transition_surface, (0, 0))
 
-        screen.fill(self.bg_color)
+        self.musical_video.update(screen)
+        #screen.fill(self.bg_color)
 
         if not self.player.is_dead:
             # Renderização normal do jogo
