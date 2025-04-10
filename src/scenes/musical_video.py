@@ -5,8 +5,10 @@ import os
 class MusicalVideo:
 
     def __init__(self):
-        self.video = cv2.VideoCapture("assets"+os.sep+"video"+os.sep+"bad_apple.mp4")
-        self.sound = pygame.mixer.Sound("assets"+os.sep+"music"+os.sep+"bad_apple.mp3")
+        video_path = os.path.join("..", "assets", "video", "bad_apple.mp4")
+        self.video = cv2.VideoCapture(video_path)
+        sound_path = os.path.join("..", "assets", "music", "bad_apple.mp3")
+        self.sound = pygame.mixer.Sound(sound_path)
         self.sound.set_volume(0.5)
         self.sound.play(loops=0)
 
