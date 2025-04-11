@@ -1,3 +1,5 @@
+from idlelib.configdialog import changes
+
 import pygame.font
 import os
 from abc import ABC, abstractmethod
@@ -76,7 +78,7 @@ class GameScene:
     def __init__(self, game, scene_name, change_status = True):
         self.game = game
         self.scene_time = 0
-        self.musical_video = MusicalVideo() if change_status else None
+        self.musical_video = MusicalVideo()
         self.scene_name = scene_name
         self.sprite_shift = (0, 0)
         self.transitioning = False
@@ -91,6 +93,8 @@ class GameScene:
         self._init_hud()
         self._init_doors(scene_name)
         self._init_death_menu()
+
+        self.change_status = change_status
 
     def _init_boundary(self, change_status):
         self.boundary = Boundary() if change_status else self.game.current_scene.boundary
@@ -111,7 +115,7 @@ class GameScene:
                 moving_frames=[f"player{os.sep}ozak_andando_{idx}.png" for idx in range(0, 4)],
                 moving_animation_speed=0.25,
                 max_cooldown=0.2, power_type="ozak", power_speed=500, power_damage=10,
-                base_speed=300, health=10, sprite_scale=1
+                base_speed=300, health=100, sprite_scale=1
             )
         else:
             self.player = self.game.current_scene.player
