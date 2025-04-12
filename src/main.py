@@ -1,8 +1,6 @@
-import pygame
-
-from scenes.game import GameScene
 from settings import *
-from scenes.menu import MenuScene
+from scenes.intro import IntroScene
+
 
 class Game:
     def __init__(self):
@@ -10,7 +8,7 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.current_scene = MenuScene(self)  # Começa com o menu
+        self.current_scene = IntroScene(self)  # Começa com o menu
 
 
     def run(self):

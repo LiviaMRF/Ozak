@@ -39,7 +39,7 @@ class GameScene:
                             screen_pos = PLAYER_POSITION, real_pos = PLAYER_POSITION, idle_frames=[f"player{os.sep}ozak_parado_{idx}.png" for idx in range(0,2) ],
                             idle_animation_speed=0.3, moving_frames=[f"player{os.sep}ozak_andando_{idx}.png" for idx in range(0,4) ], moving_animation_speed=0.25,
                             max_cooldown=0.2, power_type = "ozak", power_speed=500, power_damage=10,
-                            base_speed=300, health=100, sprite_scale=1) if change_status else self.game.current_scene.player
+                            base_speed=300, health=10000, sprite_scale=1) if change_status else self.game.current_scene.player
 
         self.player_gp = pygame.sprite.GroupSingle()
         self.player_gp.add(self.player)
