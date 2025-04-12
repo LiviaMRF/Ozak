@@ -30,6 +30,7 @@ class BichoPapao(Character):
     
     def _move_bicho_papao(self, dt):
 
+        D=250
         self._update_moving(dt)
 
         if self.is_running:
@@ -37,6 +38,9 @@ class BichoPapao(Character):
             # Movimento básico do inimigo
             self.direction.x = self.player.rect.center[0] - self.rect.center[0]
             self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+            if self.direction.magnitude()-D < 0 :
+                self.is_running=False
+                self.auto_timer=0
 
             if self.direction.magnitude()>0:
                 self.direction = self.direction.normalize()

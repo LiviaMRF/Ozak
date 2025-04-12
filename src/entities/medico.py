@@ -10,7 +10,7 @@ class Medico(Character):
     def __init__(self, player, ratio_radial_to_tangential_speed = 0.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.random_speed_buffer=[0, 0]
-
+        self.direction_sense=random.sample((-1, 1), k=1)[0]
         # Cria referência ao personagem Ozak
         self.player = player
         
@@ -22,6 +22,7 @@ class Medico(Character):
         intervalo_tempo=0.5
         if(self.auto_timer > intervalo_tempo):#refinemos essa constante 1
             self.auto_timer=0
+            self.direction_sense=random.sample((-1, 1), k=1)[0]
             #self.random_speed_buffer_current=self.random_speed_buffer_next
             #precisamos afinar essa constante v_random
             v_rand=self.speed*1
@@ -55,14 +56,15 @@ class Medico(Character):
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
         self.direction.y = self.player.rect.center[1] - self.rect.center[1]
         direction=self.direction.magnitude()
-        self.direction=self.direction*( (direction-D)/direction )
 
-        if(direction-D < 0):
+        if(direction-1.5*D < 0):
             
-            self.direction = self.direction*self.ratio_radial_to_tangential_speed*10 + pygame.math.Vector2(-self.direction.y, self.direction.x)
+            self.random_speed_buffer=-self.speed*self.direction.normalize()
+            self.direction=-self.direction.normalize()
         
         else:
-            self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)
+            self.direction=self.direction*( (direction-D)/direction )
+            self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)*self.direction_sense
 
         if self.direction.magnitude()>0:
             self.direction = self.direction.normalize()
