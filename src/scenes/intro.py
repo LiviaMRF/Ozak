@@ -325,6 +325,7 @@ class IntroScene:
                 self.message_complete = False
                 # Se estiver na última fase, inicia transição
                 if self.scene_phase >= len(self.messages):
+                    self.scene_phase = self.scene_phase%len(self.messages)
                     self.transitioning = True
             else:
                 # Completa a mensagem atual imediatamente

@@ -10,7 +10,7 @@ class Game:
         self.running = True
         self.current_scene = IntroScene(self)  # Começa com o menu
 
-
+ 
     def run(self):
         while self.running:
             dt = self.clock.tick(FPS) / 1000.0  # Delta time em segundos
