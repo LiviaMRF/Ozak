@@ -40,13 +40,13 @@ def get_words(lines):
     
 def create_spawn_list():
     f=open("spawn_list.txt", "r")
-    lines=f.readlines()
+    lines=f.read()
     f.close()
     spawn_list=[]#convention is: time name position_x(absolute) position_y(absolute) health damage
     unit_size=6 #bc we r using 5 inputs to spawn an enemy
     
     words=get_words(lines)
-    limit=unit_size*int(len(lines)/unit_size)
+    limit=unit_size*int(len(words)/unit_size)
     
     index=0
     while(index<limit):
