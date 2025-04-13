@@ -286,6 +286,7 @@ class GameScene:
         if not self.player.is_dead:
             self._update_game_state(dt)
         else:
+            self.musical_video.end_music()
             self._update_death_sequence(dt)
 
     def _update_transition(self, dt):
