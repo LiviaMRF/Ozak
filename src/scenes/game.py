@@ -31,7 +31,7 @@ class Entity(ABC):
 
 class Enemy:
     @classmethod
-    def create(cls, enemy_type, player, std_health=50, damage=2,  **kwargs):
+    def create(cls, enemy_type, player, **kwargs, std_health=50, damage=2):
         if enemy_type == "bichopapao":
             return BichoPapao(
                 player=player,
@@ -83,6 +83,7 @@ class GameScene:
         self.transitioning = False
         self.transition_alpha = 0
         self.transition_speed = 3.5
+        felf.spawn_list=create_spawn_list()
 
         # Inicializa elementos do jogo
         self._init_boundary(change_status)
@@ -136,7 +137,7 @@ class GameScene:
         for _ in range(3):
             self._create_enemy("medico", [200, 200])
 
-    def _create_enemy(self, enemy_type, screen_pos_spawn):
+    def _create_enemy(self, enemy_type, screen_pos_spawn, health=50, damage=2):
         real_pos_spawn = [
             screen_pos_spawn[0]  + self.player.real_rect.center[0],
             screen_pos_spawn[1]  + self.player.real_rect.center[1]
@@ -144,6 +145,8 @@ class GameScene:
         enemy = Enemy.create(
             enemy_type,
             player=self.player,
+            health,
+            damage,
             screen_pos=tuple(screen_pos_spawn),
             real_pos=tuple(real_pos_spawn)
         )
@@ -277,10 +280,15 @@ class GameScene:
         self.doors.update()
         self.sprite_shift = self.player.player_shift(dt)
         self.player_gp.update(dt)
+        self.update_spawn_list()
         self.enemies_gp.update(dt)
         self.power_player_gp.update(dt)
         self.power_enemy_gp.update(dt)
         self.handle_collisions()
+
+    def update_spawn_list(self):
+        if(self.spawn_list[0][0]<self.scene_time):
+            self.create_enemy(self, self.spawn_list[0][1], [self.spawn_list[0][2][0], self.spawn_list[0][2][1]], 50, 2)
 
     def _update_death_sequence(self, dt):
         # Gerencia animação de morte e exibição do menu
