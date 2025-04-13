@@ -24,7 +24,7 @@ def load_sprite(name, scale=1, convert_alpha=True):
 SCREEN_WIDTH = 1008
 SCREEN_HEIGHT = 720
 PLAYER_POSITION=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-MAP_SCALE=1
+MAP_SCALE=5
 FPS = 30
 
 # Caminhos de assets

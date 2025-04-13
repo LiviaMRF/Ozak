@@ -1,4 +1,3 @@
-from idlelib.configdialog import changes
 
 import pygame.font
 import os
@@ -32,7 +31,7 @@ class Entity(ABC):
 
 class Enemy:
     @classmethod
-    def create(cls, enemy_type, player, **kwargs):
+    def create(cls, enemy_type, player, std_health=50, damage=2,  **kwargs):
         if enemy_type == "bichopapao":
             return BichoPapao(
                 player=player,
@@ -47,9 +46,9 @@ class Enemy:
                 max_cooldown=1,
                 power_type="bichopapao",
                 power_speed=500,
-                power_damage=1,
+                power_damage=damage,
                 base_speed=300,
-                health=30,
+                health=std_health,
                 sprite_scale=1
             )
         elif enemy_type == "medico":
@@ -65,9 +64,9 @@ class Enemy:
                 max_cooldown=0.7,
                 power_type="medico",
                 power_speed=500,
-                power_damage=1,
+                power_damage=damage,
                 base_speed=250,
-                health=300,
+                health=std_health,
                 sprite_scale=1
             )
         else:
@@ -139,8 +138,8 @@ class GameScene:
 
     def _create_enemy(self, enemy_type, screen_pos_spawn):
         real_pos_spawn = [
-            screen_pos_spawn[0] - PLAYER_POSITION[0] + self.player.real_rect.center[0],
-            screen_pos_spawn[1] - PLAYER_POSITION[1] + self.player.real_rect.center[1]
+            screen_pos_spawn[0]  + self.player.real_rect.center[0],
+            screen_pos_spawn[1]  + self.player.real_rect.center[1]
         ]
         enemy = Enemy.create(
             enemy_type,
@@ -184,25 +183,6 @@ class GameScene:
         # elif scene_name == "scene2":
         #     # Porta à esquerda que leva para cena 1
         #     self.doors.add(Door(self.boundary, "left", "scene1"))
-
-    def spawn_enemy(self, enemy_name, screen_pos_spawn, power_damage, health):
-
-        real_pos_spawn = [screen_pos_spawn[0] -PLAYER_POSITION[0]+self.player.real_rect.center[0],
-                            screen_pos_spawn[1]-PLAYER_POSITION[1]+self.player.real_rect.center[1]]
-
-        if enemy_name=="BichoPapao":
-            enemy = BichoPapao(player=self.player, idle_time=3, running_time=2, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn),
-                idle_frames=[f"enemies{os.sep}bichopapao_parado_{idx}.png" for idx in range(0,2)], idle_animation_speed=0.10,
-                moving_frames=[f"enemies{os.sep}bichopapao_andando_{idx}.png" for idx in range(0,4)], moving_animation_speed=0.20,
-                max_cooldown=1, power_type = "bichopapao", power_speed=500, power_damage=power_damage, base_speed=300, health=health, sprite_scale=1)
-            self.enemies_gp.add(enemy)
-
-        if enemy_name=="Medico":
-            enemy = Medico(player=self.player, ratio_radial_to_tangential_speed = 0.15, screen_pos = tuple(screen_pos_spawn), real_pos = tuple(real_pos_spawn),
-            idle_frames=[], idle_animation_speed=0.10,
-            moving_frames=[f"enemies{os.sep}medico_andando_{idx}.png" for idx in range(0,4)], moving_animation_speed=0.20,
-            max_cooldown=0.7, power_type = "medico", power_speed=500, power_damage=power_damage, base_speed=250, health=health, sprite_scale=1)
-            self.enemies_gp.add(enemy)
 
 
     def _try_enter_door(self):
