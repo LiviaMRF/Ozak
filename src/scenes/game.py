@@ -1,5 +1,3 @@
-from idlelib.configdialog import changes
-
 import pygame.font
 import os
 from abc import ABC, abstractmethod
