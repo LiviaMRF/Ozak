@@ -20,6 +20,8 @@ fight scene (em andamento), gameover-over, gameover-win
 até um determinado raio
 
 
+SEMPRE RODAR COM A src COMO PADRÃO
+
 
 
 Inicializar jogador:
