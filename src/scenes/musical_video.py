@@ -22,3 +22,6 @@ class MusicalVideo:
         else:
             screen.fill(BLACK)
 
+    def end_music(self):
+        self.sound.set_volume(0)
+

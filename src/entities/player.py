@@ -89,4 +89,12 @@ class Player(Character):
         
         return (0,0)
     
+    def lose_health_points(self, damage):
+        super().lose_health_points(damage)
+
+        sound_path = os.path.join("..", "assets", "music", "damage-sound.mp3")
+        sound = pygame.mixer.Sound(sound_path)
+        sound.set_volume(0.1)
+        sound.play(loops=0)
+    
 
