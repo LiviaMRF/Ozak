@@ -14,7 +14,7 @@ class Boundary(pygame.sprite.Sprite):
         boundary_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
 
         # Cor do contorno (vermelho no exemplo, mas você pode escolher qualquer cor)
-        border_color = (255, 0, 0, 255)  # RGBA: Vermelho com alpha máximo
+        border_color = (255, 0, 0, 0)  # RGBA: Vermelho com alpha máximo
 
         # Desenhar o contorno do Rect na Surface
         # Primeiro criamos um Rect interno que representa a área dentro da borda

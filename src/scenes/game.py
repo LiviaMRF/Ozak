@@ -1,4 +1,4 @@
-
+import settings
 import pygame.font
 import os
 from abc import ABC, abstractmethod
@@ -31,7 +31,7 @@ class Entity(ABC):
 
 class Enemy:
     @classmethod
-    def create(cls, enemy_type, player, std_health=50, damage=2,  **kwargs):
+    def create(cls, enemy_type, player, enemy_health=50, damage=2, **kwargs):
         if enemy_type == "bichopapao":
             return BichoPapao(
                 player=player,
@@ -48,7 +48,7 @@ class Enemy:
                 power_speed=500,
                 power_damage=damage,
                 base_speed=300,
-                health=std_health,
+                health=enemy_health,
                 sprite_scale=1
             )
         elif enemy_type == "medico":
@@ -66,8 +66,24 @@ class Enemy:
                 power_speed=500,
                 power_damage=damage,
                 base_speed=250,
-                health=std_health,
+                health=enemy_health,
                 sprite_scale=1
+            )
+        elif enemy_type == "alterego":
+            return AlterEgo(player=player,
+                    screen_pos = kwargs.get('screen_pos'),
+                    real_pos = kwargs.get('real_pos'),
+                    idle_frames=[], 
+                    idle_animation_speed=0.15, 
+                    moving_frames=[f"enemies{os.sep}alterego_andando_{idx}.png" for idx in range(0,4) ],
+                    moving_animation_speed=0.15,
+                    max_cooldown=.01,
+                    power_type = "alterego",
+                    power_speed=550,
+                    power_damage=1,
+                    base_speed=600,
+                    health=5000,
+                    sprite_scale=2.5
             )
         else:
             raise ValueError(f"Tipo de inimigo desconhecido: {enemy_type}")
@@ -83,6 +99,7 @@ class GameScene:
         self.transitioning = False
         self.transition_alpha = 0
         self.transition_speed = 3.5
+        self.spawn_list=create_spawn_list()
 
         # Inicializa elementos do jogo
         self._init_boundary(change_status)
@@ -130,21 +147,28 @@ class GameScene:
 
     def _spawn_enemies(self):
         # Bicho Papão
-        self._create_enemy("bichopapao", [200, 200])
+        #self._create_enemy("bichopapao", [200, 200])
 
         # Três Médicos
-        for _ in range(3):
-            self._create_enemy("medico", [200, 200])
+        #for _ in range(3):
+            #self._create_enemy("medico", [200, 200])
+        pass
 
-    def _create_enemy(self, enemy_type, screen_pos_spawn):
+    def _create_enemy(self, enemy_type, map_pos_spawn, health=50, damage=2):
         real_pos_spawn = [
-            screen_pos_spawn[0]  + self.player.real_rect.center[0],
-            screen_pos_spawn[1]  + self.player.real_rect.center[1]
+            map_pos_spawn[0] +(-MAP_SCALE+1)*PLAYER_POSITION[0] + self.player.real_rect.center[0]*0,
+            map_pos_spawn[1] +(-MAP_SCALE+1)*PLAYER_POSITION[1] + self.player.real_rect.center[1]*0
         ]
+        screen_pos=[
+                map_pos_spawn[0] +(-MAP_SCALE+2)*PLAYER_POSITION[0] - self.player.real_rect.center[0],
+                map_pos_spawn[1] +(-MAP_SCALE+2)*PLAYER_POSITION[1] - self.player.real_rect.center[1]
+                ]
         enemy = Enemy.create(
             enemy_type,
             player=self.player,
-            screen_pos=tuple(screen_pos_spawn),
+            health=health,
+            damage=damage,
+            screen_pos=tuple(screen_pos),
             real_pos=tuple(real_pos_spawn)
         )
         self.enemies_gp.add(enemy)
@@ -277,10 +301,16 @@ class GameScene:
         self.doors.update()
         self.sprite_shift = self.player.player_shift(dt)
         self.player_gp.update(dt)
+        self.update_spawn_list()
         self.enemies_gp.update(dt)
         self.power_player_gp.update(dt)
         self.power_enemy_gp.update(dt)
         self.handle_collisions()
+
+    def update_spawn_list(self):
+        if(len(self.spawn_list)>0 and  self.spawn_list[0][0]<self.scene_time):
+            self._create_enemy(self.spawn_list[0][1], [self.spawn_list[0][2], self.spawn_list[0][3]], 50, 2)
+            self.spawn_list.remove(self.spawn_list[0])
 
     def _update_death_sequence(self, dt):
         # Gerencia animação de morte e exibição do menu
