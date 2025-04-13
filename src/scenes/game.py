@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import settings
+=======
+>>>>>>> 2d28fa264d1d79f6e96252e9ce1431da1407d10c
 import pygame.font
 import os
 from abc import ABC, abstractmethod
@@ -31,7 +34,11 @@ class Entity(ABC):
 
 class Enemy:
     @classmethod
+<<<<<<< HEAD
     def create(cls, enemy_type, player, enemy_health=50, damage=2, **kwargs):
+=======
+    def create(cls, enemy_type, player, **kwargs):
+>>>>>>> 2d28fa264d1d79f6e96252e9ce1431da1407d10c
         if enemy_type == "bichopapao":
             return BichoPapao(
                 player=player,
@@ -46,9 +53,13 @@ class Enemy:
                 max_cooldown=1,
                 power_type="bichopapao",
                 power_speed=500,
-                power_damage=damage,
+                power_damage=1,
                 base_speed=300,
+<<<<<<< HEAD
                 health=enemy_health,
+=======
+                health=30,
+>>>>>>> 2d28fa264d1d79f6e96252e9ce1431da1407d10c
                 sprite_scale=1
             )
         elif enemy_type == "medico":
@@ -64,7 +75,7 @@ class Enemy:
                 max_cooldown=0.7,
                 power_type="medico",
                 power_speed=500,
-                power_damage=damage,
+                power_damage=1,
                 base_speed=250,
                 health=enemy_health,
                 sprite_scale=1
@@ -156,8 +167,13 @@ class GameScene:
 
     def _create_enemy(self, enemy_type, map_pos_spawn, health=50, damage=2):
         real_pos_spawn = [
+<<<<<<< HEAD
             map_pos_spawn[0] +(-MAP_SCALE+1)*PLAYER_POSITION[0] + self.player.real_rect.center[0]*0,
             map_pos_spawn[1] +(-MAP_SCALE+1)*PLAYER_POSITION[1] + self.player.real_rect.center[1]*0
+=======
+            screen_pos_spawn[0] - PLAYER_POSITION[0] + self.player.real_rect.center[0],
+            screen_pos_spawn[1] - PLAYER_POSITION[1] + self.player.real_rect.center[1]
+>>>>>>> 2d28fa264d1d79f6e96252e9ce1431da1407d10c
         ]
         screen_pos=[
                 map_pos_spawn[0] +(-MAP_SCALE+2)*PLAYER_POSITION[0] - self.player.real_rect.center[0],
@@ -207,7 +223,6 @@ class GameScene:
         # elif scene_name == "scene2":
         #     # Porta à esquerda que leva para cena 1
         #     self.doors.add(Door(self.boundary, "left", "scene1"))
-
 
     def _try_enter_door(self):
         for door in self.doors:

@@ -107,13 +107,6 @@ class IntroScene:
         # Elementos de UI
         self.typing_sound_timer = 0
 
-        # Sons (apenas definidos, precisariam ser carregados)
-        self.typing_sound = None
-        self.ambient_sound = None
-        self.heartbeat_sound = None
-        self.door_sound = None
-        self.scream_sound = None
-
         # Efeito de respiração
         self.breathing = 0
         self.breath_speed = 1.0
