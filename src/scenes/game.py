@@ -309,7 +309,7 @@ class GameScene:
 
     def update_spawn_list(self):
         if(len(self.spawn_list)>0 and  self.spawn_list[0][0]<self.scene_time):
-            self._create_enemy(self.spawn_list[0][1], [self.spawn_list[0][2], self.spawn_list[0][3]], 50, 2)
+            self._create_enemy(self.spawn_list[0][1], [self.spawn_list[0][2], self.spawn_list[0][3]], self.spawn_list[0][4], self.spawn_list[0][5])
             self.spawn_list.remove(self.spawn_list[0])
 
     def _update_death_sequence(self, dt):
