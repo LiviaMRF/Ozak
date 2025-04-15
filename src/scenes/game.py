@@ -1,6 +1,4 @@
-import settings
 import pygame.font
-import os
 from abc import ABC, abstractmethod
 from entities.door import Door
 from entities.player import Player
@@ -10,9 +8,8 @@ from entities.boundary import Boundary
 from entities.bicho_papao import BichoPapao
 from entities.medico import Medico
 from entities.alter_ego import AlterEgo
-from scenes.menu import MenuScene
 from scenes.musical_video import MusicalVideo
-from entities.power import Power
+
 
 
 class Entity(ABC):
@@ -244,10 +241,9 @@ class GameScene:
 
         # Processamento normal de eventos durante o jogo
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.game.current_scene = MenuScene(self.game)
-            elif event.key == pygame.K_e:
-                self._try_enter_door()
+            if event.key == pygame.K_q:
+                pygame.quit()
+
 
         # Dispara ao clicar com o botão esquerdo do mouse
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:

@@ -26,7 +26,7 @@ class MenuScene:
         # Cores estilo hospital psiquiátrico abandonado
         self.blood_red = (120, 0, 0)
         self.dirty_white = (180, 180, 160)
-        self.sick_green = (50, 70, 40)
+        self.sick_black = BLACK
         self.dark_shadow = (15, 15, 20)
 
         # Texto com aparência danificada
@@ -178,7 +178,7 @@ class MenuScene:
 
     def render(self, screen):
         # Fundo de hospital sujo
-        screen.fill(self.sick_green)
+        screen.fill(self.sick_black)
 
         # Renderiza os rasgos na parede
         for tear in self.wall_tears:
@@ -224,11 +224,11 @@ class MenuScene:
                 )
 
         # Adiciona padrão de azulejos de hospital
-        tile_size = 40
-        for x in range(0, SCREEN_WIDTH, tile_size):
-            pygame.draw.line(screen, (100, 100, 90), (x, 0), (x, SCREEN_HEIGHT), 1)
-        for y in range(0, SCREEN_HEIGHT, tile_size):
-            pygame.draw.line(screen, (100, 100, 90), (0, y), (SCREEN_WIDTH, y), 1)
+        # tile_size = 40
+        # for x in range(0, SCREEN_WIDTH, tile_size):
+        #     pygame.draw.line(screen, (100, 100, 90), (x, 0), (x, SCREEN_HEIGHT), 1)
+        # for y in range(0, SCREEN_HEIGHT, tile_size):
+        #     pygame.draw.line(screen, (100, 100, 90), (0, y), (SCREEN_WIDTH, y), 1)
 
         # Efeito de respiração para o título
         breathing_scale = 1 + math.sin(self.breathing) * 0.03
@@ -331,11 +331,11 @@ class MenuScene:
             screen.blit(self.quit_text, (SCREEN_WIDTH // 2 - self.quit_text.get_width() // 2, quit_y))
 
         # Adiciona um texto de advertência psiquiátrica
-        warning_font = pygame.font.SysFont("Courier New", 14)
-        warning_text = warning_font.render("PACIENTE #1372 - TRATAMENTO RESTRITO", True, (150, 0, 0))
+        warning_font = pygame.font.SysFont("Courier New", 28)
+        warning_text = warning_font.render("PACIENTE #1372 - TRATAMENTO RESTRITO", True, GRAY)
         screen.blit(warning_text, (20, SCREEN_HEIGHT - 30))
 
-        date_text = warning_font.render("ADMISSÃO: 13/06/1973 - CASO: SEVERO", True, (150, 0, 0))
+        date_text = warning_font.render("ADMISSÃO: 13/06/1973 - CASO: SEVERO", True, GRAY)
         screen.blit(date_text, (SCREEN_WIDTH - date_text.get_width() - 20, 20))
 
         # Sobreposição de estática

@@ -87,23 +87,6 @@ class IntroScene:
                 'angle': random.randint(-30, 30)
             })
 
-        # Sombras/vultos nos cantos
-        self.shadows = []
-        for _ in range(6):
-            corner_x = random.choice([0, SCREEN_WIDTH])
-            corner_y = random.randint(0, SCREEN_HEIGHT)
-            size_x = random.randint(70, 150)
-            size_y = random.randint(100, 300)
-            self.shadows.append({
-                'rect': pygame.Rect(
-                    corner_x - size_x if corner_x == SCREEN_WIDTH else corner_x,
-                    corner_y - size_y // 2,
-                    size_x,
-                    size_y
-                ),
-                'alpha': random.randint(100, 180)
-            })
-
         # Elementos de UI
         self.typing_sound_timer = 0
 
@@ -122,9 +105,19 @@ class IntroScene:
         self.fade_alpha = 255
 
         # Variáveis para a sombra móvel
-        self.shadow_position = -200
-        self.shadow_direction = 1
-        self.shadow_speed = 0.5
+        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        shadow_path = os.path.join(BASE_DIR, "assets", "images", "player", "shadow.png")
+        # Carrega a imagem
+        self.shadow_sprite = pygame.image.load(shadow_path).convert_alpha()
+        self.shadow_sprite = pygame.transform.scale(self.shadow_sprite, (30, 40))
+
+        # self.shadow_sprite = pygame.transform.scale(self.shadow_sprite, (70, 80))
+        self.shadow_position_y = 175
+        self.shadow_position_x = SCREEN_WIDTH // 2 - 35
+        self.shadow_range = 35  # distância máxima para esquerda/direita
+        self.shadow_speed = 30  # pixels por segundo
+        self.shadow_direction = 1  # 1 = direita, -1 = esquerda
+        self.shadow_offset = 0
         self.shadow_appears = False
 
         # Para o efeito de piscar os olhos
@@ -209,25 +202,13 @@ class IntroScene:
         window_frame = {
             'type': 'rect',
             'rect': pygame.Rect(SCREEN_WIDTH // 2 - 100, 80, 200, 140),
-            'color': (30, 30, 50),
+            'color': BLACK,
             'outline': True,
             'outline_color': (80, 80, 90),
             'outline_width': 3,
             'z_index': 1
         }
         elements.append(window_frame)
-
-        # Barras na janela
-        for i in range(5):
-            bar_x = SCREEN_WIDTH // 2 - 90 + i * 45
-            bar = {
-                'type': 'rect',
-                'rect': pygame.Rect(bar_x, 85, 10, 130),
-                'color': (70, 70, 80),
-                'outline': False,
-                'z_index': 2
-            }
-            elements.append(bar)
 
         # Porta
         door = {
@@ -264,20 +245,20 @@ class IntroScene:
         elements.append(door_window)
 
         # Grade na janela da porta
-        for i in range(3):
+        for _ in range(3):
             door_bar_v = {
                 'type': 'rect',
-                'rect': pygame.Rect(90 + i * 20, SCREEN_HEIGHT - 320, 3, 40),
+                'rect': pygame.Rect(90 + _ * 20, SCREEN_HEIGHT - 320, 3, 40),
                 'color': (100, 100, 90),
                 'outline': False,
                 'z_index': 3
             }
             elements.append(door_bar_v)
 
-        for i in range(2):
+        for _ in range(2):
             door_bar_h = {
                 'type': 'rect',
-                'rect': pygame.Rect(70, SCREEN_HEIGHT - 310 + i * 20, 80, 3),
+                'rect': pygame.Rect(70, SCREEN_HEIGHT - 310 + _ * 20, 80, 3),
                 'color': (100, 100, 90),
                 'outline': False,
                 'z_index': 3
@@ -318,11 +299,12 @@ class IntroScene:
                 self.message_complete = False
                 # Se estiver na última fase, inicia transição
                 if self.scene_phase >= len(self.messages):
-                    self.scene_phase = self.scene_phase%len(self.messages)
                     self.transitioning = True
+
             else:
                 # Completa a mensagem atual imediatamente
-                self.typing_index = len(self.messages[self.scene_phase])
+                if  self.typing_index >= len(self.messages):
+                    self.typing_index += 1
                 self.message_complete = True
 
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
@@ -346,13 +328,13 @@ class IntroScene:
         # Atualiza o efeito de sombra móvel
         if self.scene_phase > 1:  # Depois da segunda mensagem
             self.shadow_appears = True
-            self.shadow_position += self.shadow_speed * self.shadow_direction
+            if self.shadow_appears:
+                self.shadow_offset += self.shadow_direction * self.shadow_speed * dt
+                if abs(self.shadow_offset) >= self.shadow_range:
+                    self.shadow_offset = self.shadow_range * self.shadow_direction
+                    self.shadow_direction *= -1  # Inverte a direção
 
-            # Inverte direção nas bordas
-            if self.shadow_position > SCREEN_WIDTH + 100:
-                self.shadow_direction = -1
-            elif self.shadow_position < -200:
-                self.shadow_direction = 1
+                self.shadow_position_x = self.shadow_position_x = SCREEN_WIDTH // 2 - 35 + self.shadow_offset
 
         # Atualiza o efeito de digitação de texto
         if not self.message_complete and self.scene_phase < len(self.messages):
@@ -392,6 +374,7 @@ class IntroScene:
                 self.game.current_scene.transition_alpha = 0
 
     def render(self, screen):
+
         # Desenha o chão
         pygame.draw.rect(screen, self.floor_color, (0, SCREEN_HEIGHT - 100, SCREEN_WIDTH, 100))
 
@@ -462,17 +445,13 @@ class IntroScene:
                 pygame.draw.circle(screen, element['color'], element['center'], element['radius'])
 
         # Desenha uma sombra móvel (figura sombria passando pela janela)
-        if self.shadow_appears:
-            shadow_height = 80
-            shadow_surface = pygame.Surface((50, shadow_height), pygame.SRCALPHA)
-            shadow_surface.fill((0, 0, 0, 150))
-            screen.blit(shadow_surface, (self.shadow_position, 120))
 
-        # Desenha sombras nos cantos
-        for shadow in self.shadows:
-            shadow_surface = pygame.Surface((shadow['rect'].width, shadow['rect'].height), pygame.SRCALPHA)
-            shadow_surface.fill((0, 0, 0, shadow['alpha']))
-            screen.blit(shadow_surface, (shadow['rect'].x, shadow['rect'].y))
+        if self.shadow_appears:
+            screen.blit(self.shadow_sprite, (self.shadow_position_x, self.shadow_position_y))
+
+        for i in range(5):
+            bar_x = SCREEN_WIDTH // 2 - 90 + i * 42
+            pygame.draw.rect(screen, (70, 70, 80), pygame.Rect(bar_x, 83, 10, 135))
 
         # Efeito de luz piscando
         if self.flicker_intensity > 0:
@@ -535,8 +514,8 @@ class IntroScene:
 
             # Adiciona linhas horizontais distorcidas
             line_count = int(self.transition_alpha / 10)
-            for i in range(line_count):
-                y_pos = int((i / line_count) * SCREEN_HEIGHT)
+            for _ in range(line_count):
+                y_pos = int((_ / line_count) * SCREEN_HEIGHT)
                 line_width = random.randint(1, 3)
                 line_offset = random.randint(-10, 10) if random.random() < 0.3 else 0
                 pygame.draw.line(

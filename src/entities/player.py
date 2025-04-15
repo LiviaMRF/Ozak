@@ -5,7 +5,7 @@ from entities.power import Power
 from entities.character import Character
 
 class Player(Character):
-    def __init__(self, max_stamina=100, drain_rate=20, recover_rate=15, run_speed_multiplier = 1.8, *args, **kwargs):
+    def __init__(self, max_stamina=100, drain_rate=10, recover_rate=15, run_speed_multiplier = 1.8, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Sistema de estamina (barra azul do GDD)
