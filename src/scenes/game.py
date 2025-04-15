@@ -45,9 +45,9 @@ class Enemy:
                 moving_animation_speed=0.20,
                 max_cooldown=1,
                 power_type="bichopapao",
-                power_speed=150,
+                power_speed=300,
                 power_damage=damage,
-                base_speed=400,
+                base_speed=200,
                 health=enemy_health,
                 sprite_scale=1
             )
@@ -63,7 +63,7 @@ class Enemy:
                 moving_animation_speed=0.20,
                 max_cooldown=0.7,
                 power_type="medico",
-                power_speed=150,
+                power_speed=200,
                 power_damage=damage,
                 base_speed=150,
                 health=enemy_health,
@@ -130,7 +130,7 @@ class GameScene:
                 idle_animation_speed=0.3,
                 moving_frames=[f"player{os.sep}ozak_andando_{idx}.png" for idx in range(0, 4)],
                 moving_animation_speed=0.25,
-                max_cooldown=0.08, power_type="ozak", power_speed=1000, power_damage=10,
+                max_cooldown=0.08, power_type="ozak", power_speed=1200, power_damage=10,
                 base_speed=300, health=100, sprite_scale=1
             )
         else:
