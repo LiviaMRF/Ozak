@@ -1,4 +1,5 @@
 from entities.player import Player
+from scenes.intro import IntroScene
 from settings import *
 from components.hud import HUD
 from entities.boundary import Boundary
@@ -89,7 +90,9 @@ class GameScene:
 
         self.change_status = change_status
 
-        self.game_over = GameOver(self.player, self.hud, callback_retry=lambda: self._restart_game())
+        is_playing_music = True if pygame.mixer.get_busy() else False
+        self.game_over = GameOver(self.player, self.hud, is_playing_music,
+                                  callback_intro=lambda: self._restart_intro(), callback_retry=lambda: self._restart_game())
 
     def _init_boundary(self, change_status):
         self.boundary = Boundary() if change_status else self.game.current_scene.boundary
@@ -147,6 +150,9 @@ class GameScene:
     def _restart_game(self):
         self.game.current_scene = GameScene(self.game, "scene1")
 
+    def _restart_intro(self):
+        self.game.current_scene = IntroScene(self.game)
+
     def _change_scene(self, target_scene):
         # Efeito de fade out
         self._perform_scene_transition()
@@ -167,6 +173,7 @@ class GameScene:
 
     def handle_events(self, event):
         if self.player.is_dead:
+
             self.game_over.handle_events(event)
 
         if event.type == pygame.KEYDOWN:
@@ -202,7 +209,6 @@ class GameScene:
         if not self.player.is_dead:
             self._update_game_state(dt)
         else:
-            self.musical_video.end_music()
             self.game_over.update(dt)
 
     def _update_transition(self):
@@ -278,16 +284,19 @@ class GameScene:
             self._render_game(screen)
         else:
             self.game_over.render(screen)
+            self.musical_video.update(screen, True)
 
 
 class GameOver:
-    def __init__(self, player, hud, callback_retry):
+    def __init__(self, player, hud, is_playing_music, callback_intro, callback_retry):
         self.player = player
         self.hud = hud
         self.callback_retry = callback_retry
+        self.callback_intro = callback_intro
+        self.is_playing_music = is_playing_music
 
-        # Inocializacao dos parametros do Game Over
-        self.death_timer = 2.0
+        # Inicializacao dos parametros do Game Over
+        self.death_timer = 4
         self.death_animation_complete = False
         self.show_death_menu = False
 
@@ -320,38 +329,53 @@ class GameOver:
             self._render_death_menu(screen)
 
     def _render_death_animation(self, screen):
+
         alpha = min(255, int((1 - self.death_timer / 2.0) * 255))
         darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         darken.fill((100, 0, 0))
         darken.set_alpha(alpha)
 
         screen.blit(darken, (0, 0))
+        if self.is_playing_music:
+            text = self.font_large.render("Você Morreu", True, RED)
+            text.set_alpha(min(255, int(alpha * 1.5)))
+            screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
+                               SCREEN_HEIGHT // 2 - text.get_height() // 2))
 
-        text = self.font_large.render("Você Morreu", True, RED)
-        text.set_alpha(min(255, int(alpha * 1.5)))
-        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
-                           SCREEN_HEIGHT // 2 - text.get_height() // 2))
-        self.hud.draw(screen)
+        else:
+            text = self.font_large.render("Ninguém escapa de", True, RED)
+            text2 = self.font_large.render("si mesmo", True, RED)
+
+            text.set_alpha(min(255, int(alpha * 1.5)))
+            text2.set_alpha(min(255, int(alpha * 1.5)))
+            screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
+                               SCREEN_HEIGHT // 2 - text.get_height() // 2))
+            screen.blit(text2, (SCREEN_WIDTH // 2 - text2.get_width() // 2,
+                               SCREEN_HEIGHT // 2 - text.get_height() // 2 + text.get_height()))
+
 
     def _render_death_menu(self, screen):
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))
-        screen.blit(overlay, (0, 0))
+        if self.is_playing_music:
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            screen.blit(overlay, (0, 0))
 
-        # Texto "Você Morreu"
-        text = self.font_large.render("Você Morreu", True, RED)
-        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
+            # Texto "Você Morreu"
+            text = self.font_large.render("Você Morreu", True, RED)
+            screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
 
-        # Botão "Tentar Novamente"
-        pygame.draw.rect(screen, BLACK, self.retry_button)
-        pygame.draw.rect(screen, WHITE, self.retry_button, 3)
-        retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
-        screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
-                                 self.retry_button.centery - retry_text.get_height() // 2))
+            # Botão "Tentar Novamente"
+            pygame.draw.rect(screen, BLACK, self.retry_button)
+            pygame.draw.rect(screen, WHITE, self.retry_button, 3)
+            retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
+            screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
+                                     self.retry_button.centery - retry_text.get_height() // 2))
 
-        # Botão "Q para sair"
-        pygame.draw.rect(screen, BLACK, self.quit_button)
-        pygame.draw.rect(screen, WHITE, self.quit_button, 3)
-        quit_text = self.font_medium.render("Pressione Q para sair", True, WHITE)
-        screen.blit(quit_text, (self.quit_button.centerx - quit_text.get_width() // 2,
-                                self.quit_button.centery - quit_text.get_height() // 2))
+            # Botão "Q para sair"
+            pygame.draw.rect(screen, BLACK, self.quit_button)
+            pygame.draw.rect(screen, WHITE, self.quit_button, 3)
+            quit_text = self.font_medium.render("Pressione Q para sair", True, WHITE)
+            screen.blit(quit_text, (self.quit_button.centerx - quit_text.get_width() // 2,
+                                    self.quit_button.centery - quit_text.get_height() // 2))
+        else:
+            self.callback_intro()

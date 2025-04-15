@@ -12,15 +12,16 @@ class MusicalVideo:
         self.sound.set_volume(0.5)
         self.sound.play(loops=0)
 
-    def update(self, screen):
+    def update(self, screen, stop = False):
         success, video_image = self.video.read()
 
-        if success:
+        if success and not stop:
             video_surf = pygame.image.frombuffer(
                 video_image.tobytes(), video_image.shape[1::-1], "BGR")
             screen.blit(video_surf, (0, 0))
         else:
-            screen.fill(BLACK)
+            self.sound.stop()
+
 
     def end_music(self):
         self.sound.set_volume(0)
