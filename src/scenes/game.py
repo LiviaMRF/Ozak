@@ -11,7 +11,6 @@ from entities.alter_ego import AlterEgo
 from scenes.musical_video import MusicalVideo
 
 
-
 class Entity(ABC):
     @abstractmethod
     def update(self, dt):
@@ -105,9 +104,11 @@ class GameScene:
         self._init_enemies(change_status)
         self._init_hud()
         self._init_doors(scene_name)
-        self._init_death_menu()
+
 
         self.change_status = change_status
+
+        self.game_over = GameOver(self.player, self.hud, callback_retry=lambda: self._restart_game())
 
     def _init_boundary(self, change_status):
         self.boundary = Boundary() if change_status else self.game.current_scene.boundary
@@ -173,24 +174,6 @@ class GameScene:
     def _init_hud(self):
         self.hud = HUD(self.player)
 
-    def _init_death_menu(self):
-        self.death_timer = 2.0
-        self.death_animation_complete = False
-        self.show_death_menu = False
-
-        # Fontes
-        self.font_large = pygame.font.SysFont('Arial', 72)
-        self.font_medium = pygame.font.SysFont('Arial', 48)
-        self.font_small = pygame.font.SysFont('Arial', 36)
-
-        # Botões
-        button_width = 500
-        button_height = 60
-        button_x = SCREEN_WIDTH // 2 - button_width // 2
-
-        self.retry_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height)
-        self.menu_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 100, button_width, button_height)
-
     def _init_doors(self, scene_name):
         self.doors = pygame.sprite.Group()
         self._setup_doors(scene_name)
@@ -216,6 +199,9 @@ class GameScene:
                 self._change_scene(door.target_scene)
                 break
 
+    def _restart_game(self):
+        self.game.current_scene = GameScene(self.game, "scene1")
+
     def _change_scene(self, target_scene):
         # Efeito de fade out
         self._perform_scene_transition()
@@ -235,9 +221,9 @@ class GameScene:
             pygame.time.delay(30)
 
     def handle_events(self, event):
-        if self.show_death_menu:
-            self._handle_death_menu_events(event)
-            return
+        if self.player.is_dead:
+            self.game_over.handle_events(event)
+
 
         # Processamento normal de eventos durante o jogo
         if event.type == pygame.KEYDOWN:
@@ -251,13 +237,6 @@ class GameScene:
             if power:
                 self.power_player_gp.add(power)
 
-    def _handle_death_menu_events(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            mouse_pos = pygame.mouse.get_pos()
-
-            # Botão "Tentar Novamente"
-            if self.retry_button.collidepoint(mouse_pos):
-                self.game.current_scene = GameScene(self.game, "scene1")
 
     def handle_collisions(self):
         # Verifica colisões entre poderes inimigos e jogador
@@ -283,7 +262,7 @@ class GameScene:
             self._update_game_state(dt)
         else:
             self.musical_video.end_music()
-            self._update_death_sequence(dt)
+            self.game_over.update(dt)
 
     def _update_transition(self, dt):
         if self.transitioning:
@@ -304,17 +283,9 @@ class GameScene:
         self.handle_collisions()
 
     def update_spawn_list(self):
-        if(len(self.spawn_list)>0 and  self.spawn_list[0][0]<self.scene_time):
+        if len(self.spawn_list)>0 and  self.spawn_list[0][0]<self.scene_time:
             self._create_enemy(self.spawn_list[0][1], [self.spawn_list[0][2], self.spawn_list[0][3]], self.spawn_list[0][4], self.spawn_list[0][5])
             self.spawn_list.remove(self.spawn_list[0])
-
-    def _update_death_sequence(self, dt):
-        # Gerencia animação de morte e exibição do menu
-        if not self.death_animation_complete:
-            self.death_timer -= dt
-            if self.death_timer <= 0:
-                self.death_animation_complete = True
-                self.show_death_menu = True
 
     def _move_group_and_render(self, screen, group, apply_offset=True):
         for element in group:
@@ -327,23 +298,6 @@ class GameScene:
         for sprite in group:
             screen.blit(sprite.image, (sprite.rect.x - self.sprite_shift[0],
                                        sprite.rect.y - self.sprite_shift[1]))
-
-    def _render_death_menu(self, screen):
-        # Escurece a tela para o menu
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))  # Semi-transparente
-        screen.blit(overlay, (0, 0))
-
-        # Título "Você Morreu"
-        text = self.font_large.render("Você Morreu", True, RED)
-        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
-
-        # Botão "Tentar Novamente"
-        pygame.draw.rect(screen, BLACK, self.retry_button)
-        pygame.draw.rect(screen, WHITE, self.retry_button, 3)
-        retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
-        screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
-                                 self.retry_button.centery - retry_text.get_height() // 2))
 
     def _render_game(self, screen):
         # Renderiza os poderes dos inimigos
@@ -373,43 +327,6 @@ class GameScene:
         for enemy in self.enemies_gp:
             screen.blit(enemy.current_power.image, enemy.current_power.rect)
 
-    def _render_death_animation(self, screen):
-        # Animação de morte (efeito fade)
-        temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-
-        # Aplica efeito de escurecimento progressivo
-        alpha = min(255, int((1 - self.death_timer / 2.0) * 255))
-        darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        darken.fill((100, 0, 0))  # Vermelho escuro
-        darken.set_alpha(alpha)
-
-        screen.blit(temp_surface, (0, 0))
-        screen.blit(darken, (0, 0))
-
-        # Texto "Você Morreu" durante a animação
-        font = self.font_large
-        text = font.render("Você Morreu", True, RED)
-        text_alpha = min(255, int(alpha * 1.5))  # Texto aparece mais rápido que o fundo
-        text.set_alpha(text_alpha)
-        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
-                           SCREEN_HEIGHT // 2 - text.get_height() // 2))
-
-        self.hud.draw(screen)
-
-    def _render_death_menu_screen(self, screen):
-        # Depois da animação, mostra o menu de morte
-        temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-
-        # Aplicar um efeito de desfoque/escurecimento
-        darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        darken.fill((50, 0, 0))  # Vermelho muito escuro
-        darken.set_alpha(200)  # Bastante opaco
-
-        screen.blit(temp_surface, (0, 0))
-        screen.blit(darken, (0, 0))
-
-        # Renderiza o menu de morte
-        self._render_death_menu(screen)
 
     def render(self, screen):
         # Renderiza o vídeo musical de fundo
@@ -426,8 +343,71 @@ class GameScene:
             # Renderização normal do jogo
             self._render_game(screen)
         else:
-            # Renderização durante a morte do jogador
-            if not self.death_animation_complete:
-                self._render_death_animation(screen)
-            elif self.show_death_menu:
-                self._render_death_menu_screen(screen)
+            self.game_over.render(screen)
+
+
+class GameOver:
+    def __init__(self, player, hud, callback_retry):
+        self.player = player
+        self.hud = hud
+        self.callback_retry = callback_retry
+
+        self.death_timer = 2.0
+        self.death_animation_complete = False
+        self.show_death_menu = False
+
+        self.font_large = pygame.font.SysFont('Arial', 72)
+        self.font_medium = pygame.font.SysFont('Arial', 48)
+
+        button_width = 500
+        button_height = 60
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+
+        self.retry_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height)
+
+    def update(self, dt):
+        if not self.death_animation_complete:
+            self.death_timer -= dt
+            if self.death_timer <= 0:
+                self.death_animation_complete = True
+                self.show_death_menu = True
+
+    def handle_events(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.retry_button.collidepoint(pygame.mouse.get_pos()):
+                self.callback_retry()
+
+    def render(self, screen):
+        if not self.death_animation_complete:
+            self._render_death_animation(screen)
+        elif self.show_death_menu:
+            self._render_death_menu(screen)
+
+    def _render_death_animation(self, screen):
+        alpha = min(255, int((1 - self.death_timer / 2.0) * 255))
+        darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        darken.fill((100, 0, 0))
+        darken.set_alpha(alpha)
+
+        screen.blit(darken, (0, 0))
+
+        text = self.font_large.render("Você Morreu", True, RED)
+        text.set_alpha(min(255, int(alpha * 1.5)))
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
+                           SCREEN_HEIGHT // 2 - text.get_height() // 2))
+        self.hud.draw(screen)
+
+    def _render_death_menu(self, screen):
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        screen.blit(overlay, (0, 0))
+
+        text = self.font_large.render("Você Morreu", True, RED)
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
+
+        pygame.draw.rect(screen, BLACK, self.retry_button)
+        pygame.draw.rect(screen, WHITE, self.retry_button, 3)
+        retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
+        screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
+                                 self.retry_button.centery - retry_text.get_height() // 2))
+
