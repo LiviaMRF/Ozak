@@ -352,6 +352,7 @@ class GameOver:
         self.hud = hud
         self.callback_retry = callback_retry
 
+
         self.death_timer = 2.0
         self.death_animation_complete = False
         self.show_death_menu = False
