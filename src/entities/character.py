@@ -35,7 +35,7 @@ class Character(pygame.sprite.Sprite, ABC):
         
         # Cooldown para poder lançar poder
         self.max_cooldown=max_cooldown
-        self.cooldown = 0  
+        self.cooldown = 0.0005  
 
         # Sistema dos poderes
         self.current_power = Power(power_type, power_speed, power_damage)

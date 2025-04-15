@@ -35,7 +35,7 @@ class Enemy:
         if enemy_type == "bichopapao":
             return BichoPapao(
                 player=player,
-                idle_time=kwargs.get('idle_time', 3),
+                idle_time=kwargs.get('idle_time', 1),
                 running_time=kwargs.get('running_time', 2),
                 screen_pos=kwargs.get('screen_pos'),
                 real_pos=kwargs.get('real_pos'),
@@ -45,9 +45,9 @@ class Enemy:
                 moving_animation_speed=0.20,
                 max_cooldown=1,
                 power_type="bichopapao",
-                power_speed=500,
+                power_speed=150,
                 power_damage=damage,
-                base_speed=300,
+                base_speed=400,
                 health=enemy_health,
                 sprite_scale=1
             )
@@ -63,9 +63,9 @@ class Enemy:
                 moving_animation_speed=0.20,
                 max_cooldown=0.7,
                 power_type="medico",
-                power_speed=500,
+                power_speed=150,
                 power_damage=damage,
-                base_speed=250,
+                base_speed=150,
                 health=enemy_health,
                 sprite_scale=1
             )
@@ -130,7 +130,7 @@ class GameScene:
                 idle_animation_speed=0.3,
                 moving_frames=[f"player{os.sep}ozak_andando_{idx}.png" for idx in range(0, 4)],
                 moving_animation_speed=0.25,
-                max_cooldown=0.05, power_type="ozak", power_speed=500, power_damage=10,
+                max_cooldown=0.08, power_type="ozak", power_speed=1000, power_damage=10,
                 base_speed=300, health=100, sprite_scale=1
             )
         else:
@@ -250,10 +250,15 @@ class GameScene:
                 self._try_enter_door()
 
         # Dispara ao clicar com o botão esquerdo do mouse
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            power = self.player.unleash_power(pygame.mouse.get_pos())
-            if power:
-                self.power_player_gp.add(power)
+        #if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        #    power = self.player.unleash_power(pygame.mouse.get_pos())
+        #    if power:
+        #        self.power_player_gp.add(power)
+        # Dispara ao clicar com o botão esquerdo do mouse
+        #if pygame.mouse.get_pressed()[0] and event.button == 1:
+        #    power = self.player.unleash_power(pygame.mouse.get_pos())
+        #    if power:
+        #        self.power_player_gp.add(power)
 
     def _handle_death_menu_events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -285,6 +290,10 @@ class GameScene:
 
         if not self.player.is_dead:
             self._update_game_state(dt)
+            if pygame.mouse.get_pressed()[0]:
+                power = self.player.unleash_power(pygame.mouse.get_pos())
+                if power:
+                    self.power_player_gp.add(power)
         else:
             self.musical_video.end_music()
             self._update_death_sequence(dt)
