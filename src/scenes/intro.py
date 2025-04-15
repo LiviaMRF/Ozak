@@ -1,6 +1,7 @@
 import pygame.font
 import math
 import random
+
 from settings import *
 
 
@@ -8,7 +9,6 @@ class IntroScene:
     def __init__(self, game):
         self.game = game
 
-        # Fontes para mensagens e textos
         try:
             self.message_font = pygame.font.SysFont("Courier New", 24)
             self.small_font = pygame.font.SysFont("Courier New", 16)
@@ -82,7 +82,7 @@ class IntroScene:
             self.wall_writings.append({
                 'text': message,
                 'pos': (random.randint(50, SCREEN_WIDTH - 100), random.randint(100, 400)),
-                'size': random.randint(20, 36),
+                'size': random.randint(30, 48),
                 'color': (random.randint(60, 120), 0, 0),
                 'angle': random.randint(-30, 30)
             })
@@ -109,13 +109,13 @@ class IntroScene:
         shadow_path = os.path.join(BASE_DIR, "assets", "images", "player", "shadow.png")
         # Carrega a imagem
         self.shadow_sprite = pygame.image.load(shadow_path).convert_alpha()
-        self.shadow_sprite = pygame.transform.scale(self.shadow_sprite, (30, 40))
+        self.shadow_sprite = pygame.transform.scale(self.shadow_sprite, (90, 120))
 
         # self.shadow_sprite = pygame.transform.scale(self.shadow_sprite, (70, 80))
-        self.shadow_position_y = 175
+        self.shadow_position_y = 121
         self.shadow_position_x = SCREEN_WIDTH // 2 - 35
         self.shadow_range = 35  # distância máxima para esquerda/direita
-        self.shadow_speed = 30  # pixels por segundo
+        self.shadow_speed = 10  # pixels por segundo
         self.shadow_direction = 1  # 1 = direita, -1 = esquerda
         self.shadow_offset = 0
         self.shadow_appears = False
@@ -209,11 +209,10 @@ class IntroScene:
             'z_index': 1
         }
         elements.append(window_frame)
-
-        # Porta
+        # Porta (aumentada)
         door = {
             'type': 'rect',
-            'rect': pygame.Rect(50, SCREEN_HEIGHT - 350, 120, 250),
+            'rect': pygame.Rect(50, SCREEN_HEIGHT - 420, 160, 320),
             'color': (60, 55, 50),
             'outline': True,
             'outline_color': (40, 35, 30),
@@ -222,20 +221,20 @@ class IntroScene:
         }
         elements.append(door)
 
-        # Maçaneta
+        # Maçaneta (reposicionada proporcionalmente)
         doorknob = {
             'type': 'circle',
-            'center': (140, SCREEN_HEIGHT - 230),
-            'radius': 8,
+            'center': (50 + 160 - 20, SCREEN_HEIGHT - 260),
+            'radius': 10,
             'color': (120, 120, 100),
             'z_index': 2
         }
         elements.append(doorknob)
 
-        # Pequena janela na porta
+        # Janela na porta (aumentada e centralizada proporcionalmente)
         door_window = {
             'type': 'rect',
-            'rect': pygame.Rect(70, SCREEN_HEIGHT - 320, 80, 40),
+            'rect': pygame.Rect(70, SCREEN_HEIGHT - 390, 120, 60),
             'color': (20, 20, 35),
             'outline': True,
             'outline_color': (100, 100, 90),
@@ -244,21 +243,21 @@ class IntroScene:
         }
         elements.append(door_window)
 
-        # Grade na janela da porta
-        for _ in range(3):
+        # Grade na janela da porta (atualizada para nova janela)
+        for _ in range(4):
             door_bar_v = {
                 'type': 'rect',
-                'rect': pygame.Rect(90 + _ * 20, SCREEN_HEIGHT - 320, 3, 40),
+                'rect': pygame.Rect(85 + _ * 25, SCREEN_HEIGHT - 390, 3, 60),
                 'color': (100, 100, 90),
                 'outline': False,
                 'z_index': 3
             }
             elements.append(door_bar_v)
 
-        for _ in range(2):
+        for _ in range(3):
             door_bar_h = {
                 'type': 'rect',
-                'rect': pygame.Rect(70, SCREEN_HEIGHT - 310 + _ * 20, 80, 3),
+                'rect': pygame.Rect(70, SCREEN_HEIGHT - 375 + _ * 20, 120, 3),
                 'color': (100, 100, 90),
                 'outline': False,
                 'z_index': 3
@@ -424,8 +423,12 @@ class IntroScene:
 
         # Escritos na parede
         for writing in self.wall_writings:
-            # Criar uma fonte para o texto com o tamanho especificado
-            scribble_font = pygame.font.SysFont("Arial", writing['size'])
+
+            # Carregar as fontes dos arquivos
+            BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            chiller_path = os.path.join(BASE_DIR, "assets", "fonts", "Chiller.TTF")
+
+            scribble_font = pygame.font.Font(chiller_path, writing['size'])
             # Renderizar o texto
             text_surf = scribble_font.render(writing['text'], True, writing['color'])
             # Rotacionar o texto
@@ -481,18 +484,6 @@ class IntroScene:
                                                        True, self.dirty_white)
                 screen.blit(continue_text, (SCREEN_WIDTH // 2 - continue_text.get_width() // 2,
                                             SCREEN_HEIGHT - 130))
-
-        # Efeito de vinheta (escurecimento nas bordas)
-        vignette = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        for i in range(12):
-            radius = int(max(SCREEN_WIDTH, SCREEN_HEIGHT) * (i / 10))
-            pygame.draw.circle(
-                vignette,
-                (0, 0, 0, i * 5),
-                (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
-                radius
-            )
-        screen.blit(vignette, (0, 0))
 
         # Efeito de "piscar os olhos"
         if self.blink_state:

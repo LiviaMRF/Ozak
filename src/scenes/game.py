@@ -1,4 +1,3 @@
-from entities.door import Door
 from entities.player import Player
 from settings import *
 from components.hud import HUD
@@ -87,7 +86,6 @@ class GameScene:
         self._init_player(change_status)
         self._init_enemies(change_status)
         self._init_hud()
-        self._init_doors(scene_name)
 
         self.change_status = change_status
 
@@ -145,31 +143,6 @@ class GameScene:
 
     def _init_hud(self):
         self.hud = HUD(self.player)
-
-    def _init_doors(self, scene_name):
-        self.doors = pygame.sprite.Group()
-        self._setup_doors(scene_name)
-
-    def _setup_doors(self, scene_name):
-        self.doors.empty()  # Limpa portas existentes
-
-        if scene_name == "scene1":
-            # Porta à direita que leva para cena 2
-            self.doors.add(Door(self.boundary, "right", "scene2"))
-        # elif scene_name == "scene2":
-        #     # Porta à esquerda que leva para cena 1
-        #     self.doors.add(Door(self.boundary, "left", "scene1"))
-
-    def _try_enter_door(self):
-        for door in self.doors:
-            actual_pos = (
-                door.rect.x - self.sprite_shift[0],
-                door.rect.y - self.sprite_shift[1]
-            )
-            if pygame.math.Vector2(self.player.rect.center).distance_to(actual_pos) < door.interaction_radius \
-                    and not self.player.is_moving:
-                self._change_scene(door.target_scene)
-                break
 
     def _restart_game(self):
         self.game.current_scene = GameScene(self.game, "scene1")
@@ -241,7 +214,6 @@ class GameScene:
 
     def _update_game_state(self, dt):
         # Atualiza todos os sprites
-        self.doors.update()
         self.sprite_shift = self.player.player_shift(dt)
         self.player_gp.update(dt)
         self.update_spawn_list()
@@ -280,12 +252,6 @@ class GameScene:
         self._move_group_and_render(screen, self.boundary_gp)
         self._move_group_and_render(screen, self.enemies_gp)
 
-        # if self.scene_name == "scene1":
-        #     self._draw_with_offset(screen, self.doors)
-        #     for door in self.doors:
-        #         door_center = (door.rect.centerx - self.sprite_shift[0],
-        #                        door.rect.centery - self.sprite_shift[1])
-        #         # pygame.draw.circle(screen, (255, 255, 0), door_center, door.interaction_radius, 1)
 
         self.hud.draw(screen)
         self._move_group_and_render(screen, self.player_gp, apply_offset=False)

@@ -5,7 +5,7 @@ from entities.power import Power
 from entities.character import Character
 
 class Player(Character):
-    def __init__(self, max_stamina=100, drain_rate=10, recover_rate=15, run_speed_multiplier = 1.8, *args, **kwargs):
+    def __init__(self, max_stamina = 100, drain_rate = 10, recover_rate = 15, run_speed_multiplier = 1.8, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Sistema de estamina (barra azul do GDD)
@@ -21,8 +21,7 @@ class Player(Character):
 
 
     def update(self, dt):
-        if self.health < 0:
-            self.is_dead=True
+        if self.is_dead:
             return
 
         # Atualiza o estado da animação
@@ -88,13 +87,19 @@ class Player(Character):
             return (shift_x, shift_y)
         
         return (0,0)
-    
+
     def lose_health_points(self, damage):
+        # Chama o método da classe pai para reduzir a vida
         super().lose_health_points(damage)
 
+        # Verifica se o jogador ainda está vivo após perder vida
+        if self.health <= 0:
+            self.health = 0  # Evita valores negativos
+            self.is_dead = True
+
+        # Efeito sonoro de dano
         sound_path = os.path.join("..", "assets", "music", "damage-sound.mp3")
         sound = pygame.mixer.Sound(sound_path)
         sound.set_volume(0.1)
         sound.play(loops=0)
-    
 

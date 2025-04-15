@@ -3,25 +3,17 @@ import math
 import random
 from settings import *
 
-
 class MenuScene:
     def __init__(self, game):
         self.game = game
+        # try:
+        #Carregar as fontes dos arquivos
+        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        chiller_path = os.path.join(BASE_DIR, "assets", "fonts", "Chiller.TTF")
+        arial_path = os.path.join(BASE_DIR, "assets", "fonts", "Arial.ttf")
 
-        # Fontes com estilo perturbador
-        try:
-            self.title_font = pygame.font.Font(None, 120)  # Fallback para fonte padrão
-            self.option_font = pygame.font.Font(None, 36)
-            # Tente carregar fontes específicas se disponíveis no sistema
-            try:
-                self.title_font = pygame.font.SysFont("Chiller", 120)
-                self.option_font = pygame.font.SysFont("Courier New", 36)
-            except:
-                pass
-        except:
-            # Fallback para SysFont caso Font falhe
-            self.title_font = pygame.font.SysFont(None, 120)
-            self.option_font = pygame.font.SysFont(None, 36)
+        self.title_font = pygame.font.Font(chiller_path, 120)
+        self.option_font = pygame.font.Font(arial_path, 36)
 
         # Cores estilo hospital psiquiátrico abandonado
         self.blood_red = (120, 0, 0)
