@@ -1,5 +1,3 @@
-import pygame.font
-from abc import ABC, abstractmethod
 from entities.door import Door
 from entities.player import Player
 from settings import *
@@ -9,20 +7,6 @@ from entities.bicho_papao import BichoPapao
 from entities.medico import Medico
 from entities.alter_ego import AlterEgo
 from scenes.musical_video import MusicalVideo
-
-
-class Entity(ABC):
-    @abstractmethod
-    def update(self, dt):
-        pass
-
-    @abstractmethod
-    def lose_health_points(self, damage):
-        pass
-
-    @abstractmethod
-    def unleash_power(self, target):
-        pass
 
 
 class Enemy:
@@ -105,7 +89,6 @@ class GameScene:
         self._init_hud()
         self._init_doors(scene_name)
 
-
         self.change_status = change_status
 
         self.game_over = GameOver(self.player, self.hud, callback_retry=lambda: self._restart_game())
@@ -140,17 +123,6 @@ class GameScene:
     def _init_enemies(self, change_status):
         self.enemies_gp = pygame.sprite.Group() if change_status else self.game.current_scene.enemies_gp
 
-        if change_status:
-            self._spawn_enemies()
-
-    def _spawn_enemies(self):
-        # Bicho Papão
-        #self._create_enemy("bichopapao", [200, 200])
-
-        # Três Médicos
-        #for _ in range(3):
-            #self._create_enemy("medico", [200, 200])
-        pass
 
     def _create_enemy(self, enemy_type, map_pos_spawn, health=50, damage=2):
         real_pos_spawn = [
@@ -224,19 +196,15 @@ class GameScene:
         if self.player.is_dead:
             self.game_over.handle_events(event)
 
-
-        # Processamento normal de eventos durante o jogo
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:
+                self.musical_video.end_music()
                 pygame.quit()
 
-
-        # Dispara ao clicar com o botão esquerdo do mouse
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             power = self.player.unleash_power(pygame.mouse.get_pos())
             if power:
                 self.power_player_gp.add(power)
-
 
     def handle_collisions(self):
         # Verifica colisões entre poderes inimigos e jogador
@@ -255,7 +223,7 @@ class GameScene:
                     player_power.kill()
 
     def update(self, dt):
-        self._update_transition(dt)
+        self._update_transition()
         self.scene_time += dt
 
         if not self.player.is_dead:
@@ -264,7 +232,7 @@ class GameScene:
             self.musical_video.end_music()
             self.game_over.update(dt)
 
-    def _update_transition(self, dt):
+    def _update_transition(self):
         if self.transitioning:
             if self.transition_alpha > 0:
                 self.transition_alpha -= self.transition_speed
@@ -312,12 +280,12 @@ class GameScene:
         self._move_group_and_render(screen, self.boundary_gp)
         self._move_group_and_render(screen, self.enemies_gp)
 
-        if self.scene_name == "scene1":
-            self._draw_with_offset(screen, self.doors)
-            for door in self.doors:
-                door_center = (door.rect.centerx - self.sprite_shift[0],
-                               door.rect.centery - self.sprite_shift[1])
-                # pygame.draw.circle(screen, (255, 255, 0), door_center, door.interaction_radius, 1)
+        # if self.scene_name == "scene1":
+        #     self._draw_with_offset(screen, self.doors)
+        #     for door in self.doors:
+        #         door_center = (door.rect.centerx - self.sprite_shift[0],
+        #                        door.rect.centery - self.sprite_shift[1])
+        #         # pygame.draw.circle(screen, (255, 255, 0), door_center, door.interaction_radius, 1)
 
         self.hud.draw(screen)
         self._move_group_and_render(screen, self.player_gp, apply_offset=False)
@@ -352,7 +320,7 @@ class GameOver:
         self.hud = hud
         self.callback_retry = callback_retry
 
-
+        # Inocializacao dos parametros do Game Over
         self.death_timer = 2.0
         self.death_animation_complete = False
         self.show_death_menu = False
@@ -365,6 +333,7 @@ class GameOver:
         button_x = SCREEN_WIDTH // 2 - button_width // 2
 
         self.retry_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height)
+        self.quit_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 100, button_width, button_height)
 
     def update(self, dt):
         if not self.death_animation_complete:
@@ -403,12 +372,20 @@ class GameOver:
         overlay.fill((0, 0, 0, 180))
         screen.blit(overlay, (0, 0))
 
+        # Texto "Você Morreu"
         text = self.font_large.render("Você Morreu", True, RED)
         screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
 
+        # Botão "Tentar Novamente"
         pygame.draw.rect(screen, BLACK, self.retry_button)
         pygame.draw.rect(screen, WHITE, self.retry_button, 3)
         retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
         screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
                                  self.retry_button.centery - retry_text.get_height() // 2))
 
+        # Botão "Q para sair"
+        pygame.draw.rect(screen, BLACK, self.quit_button)
+        pygame.draw.rect(screen, WHITE, self.quit_button, 3)
+        quit_text = self.font_medium.render("Pressione Q para sair", True, WHITE)
+        screen.blit(quit_text, (self.quit_button.centerx - quit_text.get_width() // 2,
+                                self.quit_button.centery - quit_text.get_height() // 2))
