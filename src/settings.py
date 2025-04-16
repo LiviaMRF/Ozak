@@ -37,23 +37,25 @@ def get_words(lines):
             index=index+1
         word=""
     return words
-    
+
+
 def create_spawn_list():
-    f=open("spawn_list.txt", "r")
-    lines=f.read()
+    f = open("spawn_list.txt", "r")
+    lines = f.read()
     f.close()
-    spawn_list=[]#convention is: time name position_x(absolute) position_y(absolute) health damage
-    unit_size=6 #bc we r using 5 inputs to spawn an enemy
-    
-    words=get_words(lines)
-    limit=unit_size*int(len(words)/unit_size)
-    
-    index=0
-    while(index<limit):
-        spawn_list.append( ( float(words[index+0]), words[index+1], float(words[index+2]), float(words[index+3]), float(words[index+4]), float(words[index+5]) ) )
-        index=index+unit_size
+    spawn_list = []  # convention is: time name position_x(absolute) position_y(absolute) health damage
+    unit_size = 6 # bc we r using 5 inputs to spawn an enemy
+
+    words = get_words(lines)
+    limit = unit_size * int(len(words) / unit_size)
+
+    index = 0
+    while (index < limit):
+        spawn_list.append((float(words[index]), str(words[index + 1]), float(words[index + 2]), float(words[index + 3]),
+                           float(words[index + 4]), float(words[index + 5])))
+        index += 6
     return spawn_list
-    
+
 # Configurações da tela
 SCREEN_WIDTH = 1008
 SCREEN_HEIGHT = 720
