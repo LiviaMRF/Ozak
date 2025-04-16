@@ -51,7 +51,7 @@ class Medico(Character):
     def _move_medico(self, dt):
 
         D=70.01
-        self.auto_timer+=dt;
+        self.auto_timer+=dt
         # Movimento básico do médico
         self.direction.x = self.player.rect.center[0] - self.rect.center[0]
         self.direction.y = self.player.rect.center[1] - self.rect.center[1]
@@ -74,9 +74,6 @@ class Medico(Character):
         
     def update(self, dt):
         
-        if self.health<0:
-            self.kill()
-
         # Atualiza o estado da animação
         self.moving_animation.update(dt)
         self.image = self.moving_animation.current_image()

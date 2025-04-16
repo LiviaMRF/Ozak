@@ -52,10 +52,10 @@ class Character(pygame.sprite.Sprite, ABC):
 
     def lose_health_points(self, damage):
         self.health -= damage
-
         if self.health <= 0:  # Mudado de "==" para "<="
             self.health = 0  # Impede valores negativos
             self.is_dead = True
+            self.kill()
 
     def unleash_power(self, obj_pos):
         if self.cooldown <= 0 and self.current_power.image:

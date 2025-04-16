@@ -49,9 +49,6 @@ class BichoPapao(Character):
         
     def update(self, dt):
         
-        if self.health<0:
-            self.kill()
-
         # Atualiza o estado da animação
         if  self.is_running:
             self.moving_animation.update(dt)

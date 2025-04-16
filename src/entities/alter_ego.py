@@ -18,9 +18,6 @@ class AlterEgo(Character):
 
 
     def update(self, dt):
-
-        if self.health<0:
-            self.kill()
         
         # Atualiza o estado da animação
         self.moving_animation.update(dt)

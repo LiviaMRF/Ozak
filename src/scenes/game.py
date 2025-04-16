@@ -297,6 +297,13 @@ class GameScene:
             self._render_game(screen)
         else:
             self.game_over.select_game_over(self.scene_time)
+
+            for enemy in self.enemies_gp:
+                enemy.kill()
+
+            for power_ball in self.power_enemy_gp:
+                power_ball.kill()
+            
             self.game_over.render(screen)
             
 

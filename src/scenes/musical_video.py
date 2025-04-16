@@ -22,4 +22,5 @@ class MusicalVideo:
         else:
             if self.sound:
                 self.sound.stop()
+            screen.fill(BLACK)
             self.sound.set_volume(0)
