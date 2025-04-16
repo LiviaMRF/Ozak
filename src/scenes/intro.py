@@ -128,6 +128,12 @@ class IntroScene:
         self.fade_in = True
         self.fade_alpha = 255
 
+        # Inicializar música da porta
+        sound_path = os.path.join("..", "assets", "music", "door-music.mp3")
+        self.door_sound= pygame.mixer.Sound(sound_path)
+        self.door_sound.set_volume(0.5)
+        self.door_sound.play(loops=-1)
+
     def create_room_elements(self):
         """Cria os elementos do quarto psiquiátrico"""
         elements = []
@@ -368,7 +374,7 @@ class IntroScene:
             self.transition_alpha += self.transition_speed
             if self.transition_alpha >= 255:
                 from .menu import MenuScene
-                self.game.current_scene = MenuScene(self.game)
+                self.game.current_scene = MenuScene(self.game, self.door_sound)
                 self.game.current_scene.transitioning = False
                 self.game.current_scene.transition_alpha = 0
 

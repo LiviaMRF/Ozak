@@ -20,9 +20,6 @@ class MusicalVideo:
                 video_image.tobytes(), video_image.shape[1::-1], "BGR")
             screen.blit(video_surf, (0, 0))
         else:
-            self.sound.stop()
-
-
-    def end_music(self):
-        self.sound.set_volume(0)
-
+            if self.sound:
+                self.sound.stop()
+            self.sound.set_volume(0)

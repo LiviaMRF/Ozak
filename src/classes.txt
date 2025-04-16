@@ -1,0 +1,2163 @@
+
+class Animation:
+    def __init__(self, frames, speed=0.1):
+        if isinstance(frames, list):  # Verifica se é lista
+            self.frames = frames
+        else:  # Se for uma única Surface
+            self.frames = [frames]  # Converte em lista com um único frame
+
+        self.speed = speed
+        self.current_frame = 0
+        self.time = 0
+
+    def update(self, dt):
+        if len(self.frames) > 1:  # Só anima se tiver múltiplos frames
+            self.time += dt
+            if self.speed < 0.1:
+                print(self.speed)
+            if self.time >= self.speed:
+                self.time = 0
+                self.current_frame = (self.current_frame + 1) % len(self.frames)
+
+    def current_image(self):
+        return self.frames[self.current_frame]
+    
+
+    def reset(self):
+        self.current_frame = 0
+        self.time = 0from settings import *
+
+class HUD:
+    def __init__(self, player):
+        self.player = player
+        self.font = pygame.font.SysFont("Arial", 20)
+        self.health_bar = pygame.Surface((200, 20))
+        self.stamina_bar = pygame.Surface((200, 20))
+
+    def draw(self, screen):
+        from entities import player
+        if self.player.is_dead:
+            return
+        # Barra de Estamina (canto inferior esquerdo)
+        stamina_width = int(200 * (self.player.stamina.current_stamina / 100))
+        pygame.draw.rect(screen, (50, 50, 50), (SCREEN_WIDTH - 224, SCREEN_HEIGHT - 60, 204, 24))
+        pygame.draw.rect(screen, (0, 100, 255), (SCREEN_WIDTH - 222, SCREEN_HEIGHT - 58, stamina_width, 20))
+
+        # Texto Estamina
+        stamina_text = self.font.render(f"{int(self.player.stamina.current_stamina)}", True, (255, 255, 255))
+        screen.blit(stamina_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT - 60))
+
+        # Barra de Vida (canto inferior direito)
+        health_width = int(200 * (self.player.health / 100))
+        pygame.draw.rect(screen, (50, 50, 50), (SCREEN_WIDTH - 224, SCREEN_HEIGHT - 40, 204, 24))
+        pygame.draw.rect(screen, (255, 50, 50), (SCREEN_WIDTH - 222, SCREEN_HEIGHT - 38, health_width, 20))
+
+        # Texto Vida
+        health_text = self.font.render(f"{max(0, int(self.player.health))}", True, (255, 255, 255))
+        screen.blit(health_text, (SCREEN_WIDTH - 220, SCREEN_HEIGHT -40))
+
+class StaminaComponent:
+    def __init__(self, max_stamina=100, drain_rate=25, recover_rate=15):
+        self.max_stamina = max_stamina
+        self.current_stamina = max_stamina
+        self.drain_rate = drain_rate  # Quantidade consumida por segundo ao correr
+        self.recover_rate = recover_rate  # Quantidade recuperada por segundo em repouso
+        self.is_exhausted = False  # Novo estado de exaustão
+
+    def update(self, dt, is_running):
+        if is_running:
+            self.current_stamina -= self.drain_rate * dt
+            if self.current_stamina <= 0:
+                self.current_stamina = 0
+                self.is_exhausted = True
+        else:
+            self.current_stamina += self.recover_rate * dt
+            if self.current_stamina >= self.max_stamina:
+                self.current_stamina = self.max_stamina
+                self.is_exhausted = False
+
+        self.current_stamina = max(0, min(self.max_stamina, self.current_stamina))from components.animation import *
+from settings import *
+from entities.power import Power, PowerBall
+from entities.character import Character
+import random
+
+class AlterEgo(Character):
+    def __init__(self, player, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Cria referência ao personagem Ozak
+        self.player = player
+        self.cooldown=0.0002
+        self.auto_timer=0
+        self.random_speed_buffer=[0, 0]
+        self.direction_sense=random.sample((-1, 1), k=1)[0]
+
+
+
+    def update(self, dt):
+
+        if self.health<0:
+            self.kill()
+        
+        # Atualiza o estado da animação
+        self.moving_animation.update(dt)
+        self.image = self.moving_animation.current_image()
+
+        self._move_alter_ego(dt)
+
+        # Atualiza cooldown
+        self.cooldown = max(0, self.cooldown - dt)
+
+        # Atualiza posição do poder
+        self._update_angular_position(PLAYER_POSITION)
+
+    def unleash_power(self, obj_pos):
+        if self.cooldown <= 0 and self.current_power.image:
+            direction = pygame.math.Vector2(obj_pos) - pygame.math.Vector2(self.rect.center)
+            if direction.length() > 0:
+                random_angle=25*random.uniform(-1, 1)
+                # Posição do cano da arma
+                power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
+                real_power_ball_pos = self.real_rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
+                
+                #add random angle to soon-to-be-shot ball
+                direction=direction.rotate(random_angle)
+
+                power_ball = PowerBall(self.current_power, power_ball_pos, real_power_ball_pos, direction)
+    
+                self.cooldown = self.max_cooldown
+                return power_ball
+        return None
+
+    def _move_alter_ego(self, dt):
+
+        '''# Movimento básico do alterego
+        D=70.01
+        self.auto_timer+=dt;
+        # Movimento básico do médico
+        self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+        self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+        direction=self.direction.magnitude()
+
+        if(direction-1.5*D < 0):
+
+            self.random_speed_buffer=-self.speed*self.direction.normalize()
+            self.direction=-self.direction.normalize()
+
+        else:
+            self.direction=self.direction*( (direction-D)/direction )
+            self.direction = self.direction*0.15 + pygame.math.Vector2(-self.direction.y, self.direction.x)*self.direction_sense
+
+        if self.direction.magnitude()>0:
+            self.direction = self.direction.normalize()
+
+        self._move_if_valid(dt)'''
+        self.auto_timer+=dt
+        if(self.auto_timer < 5):
+            return
+
+        self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+        self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+        D=250
+        
+        if(self.direction.magnitude() < D):
+            self.auto_timer=0
+            return
+        
+        if self.direction.magnitude()>0:
+            self.direction = self.direction.normalize()
+        
+        self._move_if_valid(dt)
+
+    def _move_if_valid(self, dt):
+        '''intervalo_tempo=0.5
+        if(self.auto_timer > intervalo_tempo):#refinemos essa constante 1
+            self.auto_timer=0
+            self.direction_sense=random.sample((-1, 1), k=1)[0]
+            #self.random_speed_buffer_current=self.random_speed_buffer_next
+            #precisamos afinar essa constante v_random
+            v_rand=self.speed*1
+            x_rand=random.uniform(-1, 1)#escolhemos 2 floats aleatorios entre -1 e 1
+            y_rand=random.uniform(-1, 1)
+
+            #vamos normalizar o vetor (x_rand, y_rand)
+            norma= pow(x_rand*x_rand + y_rand*y_rand, 0.5)
+            x_rand=x_rand/norma
+            y_rand=y_rand/norma
+            self.random_speed_buffer[0]=x_rand*v_rand
+            self.random_speed_buffer[1]=y_rand*v_rand'''
+
+
+        shift_x = (self.direction.x*self.speed +self.random_speed_buffer[0]*0)*dt
+        shift_y = (self.direction.y*self.speed +self.random_speed_buffer[1]*0)*dt
+
+        if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
+            self.real_rect.x += shift_x
+            self.rect.x += shift_x
+
+        if (-(MAP_SCALE-1)*SCREEN_HEIGHT/2 <= self.real_rect.top+shift_y and self.real_rect.bottom+shift_y<= (MAP_SCALE+1)*SCREEN_HEIGHT/2):
+            self.real_rect.y += shift_y
+            self.rect.y += shift_y
+
+
+
+
+        #self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+        #self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+        #
+        #if self.direction.magnitude()>0:
+        #    self.direction = self.direction.normalize()
+        #
+        #self._move_if_valid(dt)
+from components.animation import *
+from settings import *
+from entities.character import Character
+from entities.power import Power
+
+
+class BichoPapao(Character):
+    def __init__(self, player, idle_time=3, running_time=2, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Cria referência ao personagem Ozak
+        self.player = player
+        
+        # Atributos extras de movimento
+        self.auto_timer = 0
+        self.idle_time = idle_time
+        self.running_time = running_time
+        self.is_running = False
+        self.direction = pygame.math.Vector2()
+        
+
+    def _update_moving(self, dt):
+        self.auto_timer += dt
+        if self.is_running and self.auto_timer > self.running_time:
+            self.is_running=False
+            self.auto_timer=0
+        if not self.is_running and self.auto_timer > self.idle_time:
+            self.is_running=True
+            self.auto_timer=0
+    
+    def _move_bicho_papao(self, dt):
+
+        D=250
+        self._update_moving(dt)
+
+        if self.is_running:
+
+            # Movimento básico do inimigo
+            self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+            self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+            if self.direction.magnitude()-D < 0 :
+                self.is_running=False
+                self.auto_timer=0
+
+            if self.direction.magnitude()>0:
+                self.direction = self.direction.normalize()
+
+            self._move_if_valid(dt)
+        
+    def update(self, dt):
+        
+        if self.health<0:
+            self.kill()
+
+        # Atualiza o estado da animação
+        if  self.is_running:
+            self.moving_animation.update(dt)
+            self.image = self.moving_animation.current_image()
+        else:
+            self.idle_animation.update(dt)
+            self.image = self.idle_animation.current_image()
+
+        # Atualiza lógica
+        self._move_bicho_papao(dt)
+        self.cooldown = max(0, self.cooldown - dt)
+
+        # Atualiza posição do poder
+        self._update_angular_position(PLAYER_POSITION)
+
+
+
+
+import pygame
+from settings import *
+
+
+class Boundary(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+
+        self.rect = pygame.Rect( -(MAP_SCALE-1)*SCREEN_WIDTH/2, -(MAP_SCALE-1)*SCREEN_HEIGHT/2, \
+                                    MAP_SCALE*SCREEN_WIDTH, MAP_SCALE*SCREEN_HEIGHT)
+        
+        self.real_rect = self.rect.copy()
+
+        boundary_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+
+        # Cor do contorno (vermelho no exemplo, mas você pode escolher qualquer cor)
+        border_color = (255, 0, 0, 0)  # RGBA: Vermelho com alpha máximo
+
+        # Desenhar o contorno do Rect na Surface
+        # Primeiro criamos um Rect interno que representa a área dentro da borda
+        border_width = 2
+        inner_rect = self.rect.copy()  # Faz uma cópia
+        inner_rect.inflate_ip(-2*border_width, -2*border_width)  # Reduz em ambas as direções
+
+        # Ajustamos as coordenadas porque estamos desenhando na Surface, não na tela
+        drawing_rect = pygame.Rect(
+            border_width,
+            border_width,
+            self.rect.width - 2*border_width,
+            self.rect.height - 2*border_width
+        )
+
+
+        pygame.draw.rect(boundary_surface, border_color, drawing_rect, border_width)
+
+        self.image = boundary_surface
+from components.animation import *
+from settings import *
+from entities.power import Power, PowerBall
+from abc import ABC, abstractmethod
+
+class Character(pygame.sprite.Sprite, ABC):
+    def __init__(self, screen_pos, real_pos, idle_frames=["player"+os.sep+"ozak_dead.png"], idle_animation_speed=0.15,
+                moving_frames=["player"+os.sep+"ozak_dead.png"], moving_animation_speed=0.15,
+                max_cooldown=0.2, power_type = "brown", power_speed=500, power_damage=10,
+                base_speed=300, health=100, sprite_scale=1):
+        super().__init__()
+
+        # Carrega sprites e animações
+        self.moving_animation_speed = moving_animation_speed
+        self.idle_animation_speed = idle_animation_speed
+
+        self.idle_frames = []
+        
+        for frame in idle_frames:
+            self.idle_frames.append(load_sprite(frame, sprite_scale))
+
+        self.moving_frames = []
+
+        for frame in moving_frames:
+            self.moving_frames.append(load_sprite(frame, sprite_scale))
+        
+        self.moving_animation = Animation(self.moving_frames, moving_animation_speed)  
+        self.idle_animation = Animation(self.idle_frames, idle_animation_speed)  
+
+        # Configuração inicial dos sprites
+        self.image = self.moving_frames[0]
+        self.rect = self.image.get_rect(center=screen_pos)
+        self.real_rect = self.image.get_rect(center=real_pos)
+
+        
+        # Cooldown para poder lançar poder
+        self.max_cooldown=max_cooldown
+        self.cooldown = 0  
+
+        # Sistema dos poderes
+        self.current_power = Power(power_type, power_speed, power_damage)
+        self.power_offset = pygame.math.Vector2(30*sprite_scale, 0) # Posição relativa ao personagem
+
+        # Atributos de movimento
+        self.speed = base_speed
+        self.base_speed = base_speed
+        self.direction = pygame.math.Vector2()
+        
+        # Sistema de vida
+        self.health = health
+        self.is_dead = False
+
+
+    def lose_health_points(self, damage):
+        self.health-=damage
+
+        if self.health == 0:
+            self.is_dead = True
+
+    def unleash_power(self, obj_pos):
+        if self.cooldown <= 0 and self.current_power.image:
+            direction = pygame.math.Vector2(obj_pos) - pygame.math.Vector2(self.rect.center)
+            if direction.length() > 0:
+                # Posição do cano da arma
+                power_ball_pos = self.rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
+                real_power_ball_pos = self.real_rect.center + self.power_offset.rotate(-direction.angle_to((1, 0)))
+
+                power_ball = PowerBall(self.current_power, power_ball_pos, real_power_ball_pos, direction)
+    
+                self.cooldown = self.max_cooldown
+                return power_ball
+        return None
+
+    def _update_angular_position(self, target_pos):
+        # Calcula a direção do character até o cursor
+        direction = pygame.math.Vector2(target_pos) - pygame.math.Vector2(self.rect.center)
+
+        if direction.length() > 0:
+            direction = direction.normalize()
+
+        # Rotaciona a imagem da arma conforme o ângulo da direção
+        angle = -direction.angle_to(pygame.math.Vector2(1, 0))  # Calcula o ângulo correto
+
+        # Define ponto de fixação (ajuste esses valores)
+        pivot_offset = pygame.math.Vector2(0, 0)  # Relativo ao centro do player
+        power_center = self.rect.center + pivot_offset
+
+        # Ajusta a posição da arma em relação ao jogador
+        rotated_offset = self.power_offset.rotate(angle)  # Aplica rotação ao offset
+        power_pos = pygame.math.Vector2(power_center) + rotated_offset
+
+        # Atualiza a posição e a rotação da arma
+        self.current_power.image = pygame.transform.rotate(load_sprite(f"powers{os.sep}power_{self.current_power.power_type}_0.png",
+                                                                        scale= self.current_power.sprite_scale), angle)
+        self.current_power.rect = self.current_power.image.get_rect(center=power_pos)
+        self.image = pygame.transform.rotate(self.image, -angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def _move_if_valid(self, dt):
+        shift_x = self.direction.x*self.speed*dt
+        shift_y = self.direction.y*self.speed*dt
+
+        if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
+            self.real_rect.x += shift_x
+            self.rect.x += shift_x
+
+        if (-(MAP_SCALE-1)*SCREEN_HEIGHT/2 <= self.real_rect.top+shift_y and self.real_rect.bottom+shift_y<= (MAP_SCALE+1)*SCREEN_HEIGHT/2):
+            self.real_rect.y += shift_y
+            self.rect.y += shift_y
+
+
+    @abstractmethod
+    def update(self, dt):
+        pass
+
+from settings import *
+
+
+class Door(pygame.sprite.Sprite):
+    def __init__(self, boundary, side, target_scene):
+        super().__init__()
+
+        # Configurações da porta
+        self.width = 60
+        self.height = 100
+        self.side = side  # "right", "left", "top", "bottom"
+        self.target_scene = target_scene
+        self.interaction_radius = 70
+
+        # Cria a superfície da porta
+        self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        self._draw_door()
+
+        # Posiciona relativo ao boundary
+        self.boundary = boundary
+        self._reposition()
+
+    def _draw_door(self):
+
+        pygame.draw.rect(self.image, (150, 75, 0), (0, 0, self.width, self.height))
+        pygame.draw.rect(self.image, (200, 150, 50), (0, 0, self.width, self.height), 3)
+
+    def _reposition(self):
+
+        if self.side == "right":
+            self.rect = self.image.get_rect(
+                left=self.boundary.rect.right - self.width,
+                centery=self.boundary.rect.centery
+            )
+        elif self.side == "left":
+            self.rect = self.image.get_rect(
+                right=self.boundary.rect.left + self.width,
+                centery=self.boundary.rect.centery
+            )
+
+    def get_rect(self):
+        return self.rect.copy()
+
+    def update(self):
+        self._reposition()from components.animation import *
+from settings import *
+from entities.character import Character
+from entities.power import Power
+import random
+
+
+class Medico(Character):
+    auto_timer=0
+    def __init__(self, player, ratio_radial_to_tangential_speed = 0.15, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_speed_buffer=[0, 0]
+        self.direction_sense=random.sample((-1, 1), k=1)[0]
+        # Cria referência ao personagem Ozak
+        self.player = player
+        
+        # Cria variáveis de movivento
+        self.ratio_radial_to_tangential_speed = ratio_radial_to_tangential_speed
+
+        
+    def _move_if_valid(self, dt):
+        intervalo_tempo=0.5
+        if(self.auto_timer > intervalo_tempo):#refinemos essa constante 1
+            self.auto_timer=0
+            self.direction_sense=random.sample((-1, 1), k=1)[0]
+            #self.random_speed_buffer_current=self.random_speed_buffer_next
+            #precisamos afinar essa constante v_random
+            v_rand=self.speed*1
+            x_rand=random.uniform(-1, 1)#escolhemos 2 floats aleatorios entre -1 e 1
+            y_rand=random.uniform(-1, 1)
+
+            #vamos normalizar o vetor (x_rand, y_rand)
+            norma= pow(x_rand*x_rand + y_rand*y_rand, 0.5)
+            x_rand=x_rand/norma
+            y_rand=y_rand/norma
+            self.random_speed_buffer[0]=x_rand*v_rand
+            self.random_speed_buffer[1]=y_rand*v_rand
+
+
+        shift_x = (self.direction.x*self.speed +self.random_speed_buffer[0])*dt
+        shift_y = (self.direction.y*self.speed +self.random_speed_buffer[1])*dt
+
+        if  -(MAP_SCALE-1)*SCREEN_WIDTH/2 <= self.real_rect.left+shift_x and self.real_rect.right+shift_x <= (MAP_SCALE+1)*SCREEN_WIDTH/2 :
+            self.real_rect.x += shift_x
+            self.rect.x += shift_x
+
+        if (-(MAP_SCALE-1)*SCREEN_HEIGHT/2 <= self.real_rect.top+shift_y and self.real_rect.bottom+shift_y<= (MAP_SCALE+1)*SCREEN_HEIGHT/2):
+            self.real_rect.y += shift_y
+            self.rect.y += shift_y
+
+    def _move_medico(self, dt):
+
+        D=70.01
+        self.auto_timer+=dt;
+        # Movimento básico do médico
+        self.direction.x = self.player.rect.center[0] - self.rect.center[0]
+        self.direction.y = self.player.rect.center[1] - self.rect.center[1]
+        direction=self.direction.magnitude()
+
+        if(direction-1.5*D < 0):
+            
+            self.random_speed_buffer=-self.speed*self.direction.normalize()
+            self.direction=-self.direction.normalize()
+        
+        else:
+            self.direction=self.direction*( (direction-D)/direction )
+            self.direction = self.direction*self.ratio_radial_to_tangential_speed + pygame.math.Vector2(-self.direction.y, self.direction.x)*self.direction_sense
+
+        if self.direction.magnitude()>0:
+            self.direction = self.direction.normalize()
+
+        self._move_if_valid(dt)
+
+        
+    def update(self, dt):
+        
+        if self.health<0:
+            self.kill()
+
+        # Atualiza o estado da animação
+        self.moving_animation.update(dt)
+        self.image = self.moving_animation.current_image()
+
+        # Atualiza dooldown e move o médico
+        self._move_medico(dt)
+        self.cooldown = max(0, self.cooldown - dt)
+
+        # Atualiza posição do poder
+        self._update_angular_position(PLAYER_POSITION)
+
+from components.animation import *
+from settings import *
+from components.stamina import StaminaComponent
+from entities.power import Power
+from entities.character import Character
+
+class Player(Character):
+    def __init__(self, max_stamina=100, drain_rate=20, recover_rate=15, run_speed_multiplier = 1.8, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Sistema de estamina (barra azul do GDD)
+        self.stamina = StaminaComponent(max_stamina, drain_rate, recover_rate)
+
+        # Estado de movimento
+        self.run_speed_multiplier = run_speed_multiplier # Velocidade ao correr
+        self.is_running = False
+        self.is_moving = False
+
+        # Animação de corrida
+        self.running_animation = Animation(self.moving_frames, self.moving_animation_speed/2)  
+
+
+    def update(self, dt):
+        if self.health < 0:
+            self.is_dead=True
+            return
+
+        # Atualiza o estado da animação
+        if  self.is_running:
+            self.running_animation.update(dt)
+            self.image = self.running_animation.current_image()
+        elif self.is_moving:
+            self.moving_animation.update(dt)
+            self.image = self.moving_animation.current_image()
+        else:
+            self.idle_animation.update(dt)
+            self.image = self.idle_animation.current_image()
+
+        # Atualiza movimento com input
+        self._handle_input()
+        self.stamina.update(dt, self.is_running)
+        self.cooldown = max(0, self.cooldown - dt)
+
+        # Atualiza posição do poder
+        self._update_angular_position(pygame.mouse.get_pos())
+
+    def _handle_input(self):
+
+        keys = pygame.key.get_pressed()
+
+        # Movimento básico (WASD)
+        self.direction.x = keys[pygame.K_d] - keys[pygame.K_a]
+        self.direction.y = keys[pygame.K_s] - keys[pygame.K_w]
+        self.is_moving = self.direction.magnitude() > 0
+
+        # Normaliza diagonal
+        if self.is_moving:
+            self.direction = self.direction.normalize()
+
+        # Corrida (Shift esquerdo) - Só corre se tiver estamina
+        self.is_running = (keys[pygame.K_LSHIFT] or pygame.mouse.get_pressed()[2]) and (not self.stamina.is_exhausted) and self.is_moving
+
+    def player_shift(self, dt):
+
+        if self.stamina.is_exhausted:
+            self.speed = self.base_speed * 0.7
+        else: self.speed = self.base_speed * (self.run_speed_multiplier if self.is_running else 1)
+
+        # Não corre se acabar a estamina
+        if not self.stamina.is_exhausted or not self.is_running:
+            
+            shift_x = self.direction.x * self.speed * dt
+
+            if   -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_rect.left+shift_x \
+                or self.real_rect.right+ shift_x > (MAP_SCALE+1)*SCREEN_WIDTH/2:
+
+                shift_x = 0
+
+            shift_y = self.direction.y * self.speed * dt
+        
+            if   -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_rect.top+shift_y \
+                or self.real_rect.bottom+ shift_y > (MAP_SCALE+1)*SCREEN_HEIGHT/2:
+
+                shift_y=0
+        
+            self.real_rect.x += shift_x
+            self.real_rect.y += shift_y
+            return (shift_x, shift_y)
+        
+        return (0,0)
+    
+    def lose_health_points(self, damage):
+        super().lose_health_points(damage)
+
+        sound_path = os.path.join("..", "assets", "music", "damage-sound.mp3")
+        sound = pygame.mixer.Sound(sound_path)
+        sound.set_volume(0.1)
+        sound.play(loops=0)
+    
+
+import pygame
+from components.animation import *
+from settings import *
+
+class Power(pygame.sprite.Sprite):
+    def __init__(self, power_type="pink", speed=500, damage=10):
+        super().__init__()
+        self.power_type=power_type
+        self.speed = speed
+        self.damage = damage
+        self.sprite_scale=0.7
+
+        # Carrega a imagem da poder
+        self.image = load_sprite(f"powers{os.sep}power_{power_type}_0.png", scale=self.sprite_scale)
+        self.rect = self.image.get_rect(center=(0,0))
+
+class PowerBall(Power):
+
+    def __init__(self, power, screen_pos, real_pos, direction):
+        super().__init__(power.power_type, power.speed, power.damage)
+
+        self.rect = self.image.get_rect(center=screen_pos)
+        self.real_rect = self.image.get_rect(center=real_pos)
+        self.power_ball_frames = [load_sprite(f"powers{os.sep}power_{power.power_type}_{idx}.png", self.sprite_scale) for idx in range (0,2)]
+        self.power_ball_animation = Animation(self.power_ball_frames, 0.15)  
+
+        # Direção e movimento
+        self.direction = direction.normalize()
+        
+
+    def update(self, dt):
+        self.rect.x += self.direction[0]*self.speed * dt 
+        self.rect.y += self.direction[1]*self.speed * dt
+        self.real_rect.x += self.direction[0]*self.speed * dt 
+        self.real_rect.y += self.direction[1]*self.speed * dt 
+
+        self.power_ball_animation.update(dt)
+        self.image = self.power_ball_animation.current_image()
+        
+        if -(MAP_SCALE-1)*SCREEN_WIDTH/2 > self.real_rect.left\
+                or self.real_rect.right > (MAP_SCALE+1)*SCREEN_WIDTH/2\
+                or  -(MAP_SCALE-1)*SCREEN_HEIGHT/2 > self.real_rect.top \
+               or self.real_rect.bottom> (MAP_SCALE+1)*SCREEN_HEIGHT/2:
+
+
+            self.kill()
+echo "">classes.txt
+grep -r "class "  --binary-files='without-match' -l | xargs cat >> classes.txt
+from settings import *
+from scenes.intro import IntroScene
+
+
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.running = True
+
+        sound_path = os.path.join("..", "assets", "music", "door-music.mp3")
+        self.door_sound= pygame.mixer.Sound(sound_path)
+        self.door_sound.set_volume(0.5)
+        self.door_sound.play(loops=-1)
+
+        self.current_scene = IntroScene(self)  # Começa com o menu
+
+ 
+    def run(self):
+        while self.running:
+            dt = self.clock.tick(FPS) / 1000.0  # Delta time em segundos
+
+            # Trata eventos
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                self.current_scene.handle_events(event)
+
+            # Atualiza e renderizada a cena atual
+            self.current_scene.update(dt)
+            self.current_scene.render(self.screen)
+            pygame.display.flip()
+
+        pygame.quit()
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()import settings
+import pygame.font
+import os
+from abc import ABC, abstractmethod
+from entities.door import Door
+from entities.player import Player
+from settings import *
+from components.hud import HUD
+from entities.boundary import Boundary
+from entities.bicho_papao import BichoPapao
+from entities.medico import Medico
+from entities.alter_ego import AlterEgo
+from scenes.menu import MenuScene
+from scenes.musical_video import MusicalVideo
+from entities.power import Power
+
+
+class Entity(ABC):
+    @abstractmethod
+    def update(self, dt):
+        pass
+
+    @abstractmethod
+    def lose_health_points(self, damage):
+        pass
+
+    @abstractmethod
+    def unleash_power(self, target):
+        pass
+
+
+class Enemy:
+    @classmethod
+    def create(cls, enemy_type, player, enemy_health=50, damage=2, **kwargs):
+        if enemy_type == "bichopapao":
+            return BichoPapao(
+                player=player,
+                idle_time=kwargs.get('idle_time', 3),
+                running_time=kwargs.get('running_time', 2),
+                screen_pos=kwargs.get('screen_pos'),
+                real_pos=kwargs.get('real_pos'),
+                idle_frames=[f"enemies{os.sep}bichopapao_parado_{idx}.png" for idx in range(0, 2)],
+                idle_animation_speed=0.10,
+                moving_frames=[f"enemies{os.sep}bichopapao_andando_{idx}.png" for idx in range(0, 4)],
+                moving_animation_speed=0.20,
+                max_cooldown=1,
+                power_type="bichopapao",
+                power_speed=500,
+                power_damage=1,
+                base_speed=300,
+                health=enemy_health,
+                sprite_scale=1
+            )
+        elif enemy_type == "medico":
+            return Medico(
+                player=player,
+                ratio_radial_to_tangential_speed=kwargs.get('ratio_radial_to_tangential_speed', 0.15),
+                screen_pos=kwargs.get('screen_pos'),
+                real_pos=kwargs.get('real_pos'),
+                idle_frames=[],
+                idle_animation_speed=0.10,
+                moving_frames=[f"enemies{os.sep}medico_andando_{idx}.png" for idx in range(0, 4)],
+                moving_animation_speed=0.20,
+                max_cooldown=0.7,
+                power_type="medico",
+                power_speed=500,
+                power_damage=1,
+                base_speed=250,
+                health=enemy_health,
+                sprite_scale=1
+            )
+        elif enemy_type == "alterego":
+            return AlterEgo(player=player,
+                    screen_pos = kwargs.get('screen_pos'),
+                    real_pos = kwargs.get('real_pos'),
+                    idle_frames=[], 
+                    idle_animation_speed=0.15, 
+                    moving_frames=[f"enemies{os.sep}alterego_andando_{idx}.png" for idx in range(0,4) ],
+                    moving_animation_speed=0.15,
+                    max_cooldown=.01,
+                    power_type = "alterego",
+                    power_speed=550,
+                    power_damage=1,
+                    base_speed=600,
+                    health=5000,
+                    sprite_scale=2.5
+            )
+        else:
+            raise ValueError(f"Tipo de inimigo desconhecido: {enemy_type}")
+
+
+class GameScene:
+    def __init__(self, game, scene_name, change_status = True):
+        self.game = game
+        self.scene_time = 0
+        self.musical_video = MusicalVideo()
+        self.scene_name = scene_name
+        self.sprite_shift = (0, 0)
+        self.transitioning = False
+        self.transition_alpha = 0
+        self.transition_speed = 3.5
+        self.spawn_list=create_spawn_list()
+
+        # Inicializa elementos do jogo
+        self._init_boundary(change_status)
+        self._init_power_groups()
+        self._init_player(change_status)
+        self._init_enemies(change_status)
+        self._init_hud()
+        self._init_doors(scene_name)
+        self._init_death_menu()
+
+        self.change_status = change_status
+
+    def _init_boundary(self, change_status):
+        self.boundary = Boundary() if change_status else self.game.current_scene.boundary
+        self.boundary_gp = pygame.sprite.GroupSingle()
+        self.boundary_gp.add(self.boundary)
+
+    def _init_power_groups(self):
+        self.power_player_gp = pygame.sprite.Group()
+        self.power_enemy_gp = pygame.sprite.Group()
+
+    def _init_player(self, change_status):
+        if change_status:
+            self.player = Player(
+                max_stamina=100, drain_rate=20, recover_rate=15, run_speed_multiplier=1.8,
+                screen_pos=PLAYER_POSITION, real_pos=PLAYER_POSITION,
+                idle_frames=[f"player{os.sep}ozak_parado_{idx}.png" for idx in range(0, 2)],
+                idle_animation_speed=0.3,
+                moving_frames=[f"player{os.sep}ozak_andando_{idx}.png" for idx in range(0, 4)],
+                moving_animation_speed=0.25,
+                max_cooldown=0.2, power_type="ozak", power_speed=500, power_damage=10,
+                base_speed=300, health=100, sprite_scale=1
+            )
+        else:
+            self.player = self.game.current_scene.player
+
+        self.player_gp = pygame.sprite.GroupSingle()
+        self.player_gp.add(self.player)
+
+    def _init_enemies(self, change_status):
+        self.enemies_gp = pygame.sprite.Group() if change_status else self.game.current_scene.enemies_gp
+
+        if change_status:
+            self._spawn_enemies()
+
+    def _spawn_enemies(self):
+        # Bicho Papão
+        #self._create_enemy("bichopapao", [200, 200])
+
+        # Três Médicos
+        #for _ in range(3):
+            #self._create_enemy("medico", [200, 200])
+        pass
+
+    def _create_enemy(self, enemy_type, map_pos_spawn, health=50, damage=2):
+        real_pos_spawn = [
+            map_pos_spawn[0] +(-MAP_SCALE+1)*PLAYER_POSITION[0] + self.player.real_rect.center[0]*0,
+            map_pos_spawn[1] +(-MAP_SCALE+1)*PLAYER_POSITION[1] + self.player.real_rect.center[1]*0
+        ]
+        screen_pos=[
+                map_pos_spawn[0] +(-MAP_SCALE+2)*PLAYER_POSITION[0] - self.player.real_rect.center[0],
+                map_pos_spawn[1] +(-MAP_SCALE+2)*PLAYER_POSITION[1] - self.player.real_rect.center[1]
+                ]
+        enemy = Enemy.create(
+            enemy_type,
+            player=self.player,
+            health=health,
+            damage=damage,
+            screen_pos=tuple(screen_pos),
+            real_pos=tuple(real_pos_spawn)
+        )
+        self.enemies_gp.add(enemy)
+
+    def _init_hud(self):
+        self.hud = HUD(self.player)
+
+    def _init_death_menu(self):
+        self.death_timer = 2.0
+        self.death_animation_complete = False
+        self.show_death_menu = False
+
+        # Fontes
+        self.font_large = pygame.font.SysFont('Arial', 72)
+        self.font_medium = pygame.font.SysFont('Arial', 48)
+        self.font_small = pygame.font.SysFont('Arial', 36)
+
+        # Botões
+        button_width = 500
+        button_height = 60
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+
+        self.retry_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height)
+        self.menu_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 100, button_width, button_height)
+
+    def _init_doors(self, scene_name):
+        self.doors = pygame.sprite.Group()
+        self._setup_doors(scene_name)
+
+    def _setup_doors(self, scene_name):
+        self.doors.empty()  # Limpa portas existentes
+
+        if scene_name == "scene1":
+            # Porta à direita que leva para cena 2
+            self.doors.add(Door(self.boundary, "right", "scene2"))
+        # elif scene_name == "scene2":
+        #     # Porta à esquerda que leva para cena 1
+        #     self.doors.add(Door(self.boundary, "left", "scene1"))
+
+    def _try_enter_door(self):
+        for door in self.doors:
+            actual_pos = (
+                door.rect.x - self.sprite_shift[0],
+                door.rect.y - self.sprite_shift[1]
+            )
+            if pygame.math.Vector2(self.player.rect.center).distance_to(actual_pos) < door.interaction_radius \
+                    and not self.player.is_moving:
+                self._change_scene(door.target_scene)
+                break
+
+    def _change_scene(self, target_scene):
+        # Efeito de fade out
+        self._perform_scene_transition()
+
+        self.sprite_shift = (0, 0)
+        self.game.current_scene = GameScene(self.game, target_scene, change_status=False)
+        self.game.current_scene.sprite_shift = (0, 0)
+
+    def _perform_scene_transition(self):
+        for alpha in range(0, 255, 15):
+            fade_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            fade_surface.fill((0, 0, 0))
+            fade_surface.set_alpha(alpha)
+            self.render(self.game.screen)
+            self.game.screen.blit(fade_surface, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(30)
+
+    def handle_events(self, event):
+        if self.show_death_menu:
+            self._handle_death_menu_events(event)
+            return
+
+        # Processamento normal de eventos durante o jogo
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.game.current_scene = MenuScene(self.game)
+            elif event.key == pygame.K_e:
+                self._try_enter_door()
+
+        # Dispara ao clicar com o botão esquerdo do mouse
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            power = self.player.unleash_power(pygame.mouse.get_pos())
+            if power:
+                self.power_player_gp.add(power)
+
+    def _handle_death_menu_events(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_pos = pygame.mouse.get_pos()
+
+            # Botão "Tentar Novamente"
+            if self.retry_button.collidepoint(mouse_pos):
+                self.game.current_scene = GameScene(self.game, "scene1")
+
+    def handle_collisions(self):
+        # Verifica colisões entre poderes inimigos e jogador
+        for enemy_power in self.power_enemy_gp:
+            if self.player.rect.colliderect(enemy_power.rect) \
+                    and pygame.sprite.collide_mask(self.player, enemy_power):
+                self.player.lose_health_points(enemy_power.damage)
+                enemy_power.kill()
+
+        # Verifica colisões entre poderes do jogador e inimigos
+        for player_power in self.power_player_gp:
+            for enemy in self.enemies_gp:
+                if enemy.rect.colliderect(player_power.rect) \
+                        and pygame.sprite.collide_mask(enemy, player_power):
+                    enemy.lose_health_points(player_power.damage)
+                    player_power.kill()
+
+    def update(self, dt):
+        self._update_transition(dt)
+        self.scene_time += dt
+
+        if not self.player.is_dead:
+            self._update_game_state(dt)
+        else:
+            self.musical_video.end_music()
+            self._update_death_sequence(dt)
+
+    def _update_transition(self, dt):
+        if self.transitioning:
+            if self.transition_alpha > 0:
+                self.transition_alpha -= self.transition_speed
+                if self.transition_alpha <= 0:
+                    self.transitioning = False
+
+    def _update_game_state(self, dt):
+        # Atualiza todos os sprites
+        self.doors.update()
+        self.sprite_shift = self.player.player_shift(dt)
+        self.player_gp.update(dt)
+        self.update_spawn_list()
+        self.enemies_gp.update(dt)
+        self.power_player_gp.update(dt)
+        self.power_enemy_gp.update(dt)
+        self.handle_collisions()
+
+    def update_spawn_list(self):
+        if(len(self.spawn_list)>0 and  self.spawn_list[0][0]<self.scene_time):
+            self._create_enemy(self.spawn_list[0][1], [self.spawn_list[0][2], self.spawn_list[0][3]], 50, 2)
+            self.spawn_list.remove(self.spawn_list[0])
+
+    def _update_death_sequence(self, dt):
+        # Gerencia animação de morte e exibição do menu
+        if not self.death_animation_complete:
+            self.death_timer -= dt
+            if self.death_timer <= 0:
+                self.death_animation_complete = True
+                self.show_death_menu = True
+
+    def _move_group_and_render(self, screen, group, apply_offset=True):
+        for element in group:
+            if apply_offset:
+                element.rect.x -= self.sprite_shift[0]
+                element.rect.y -= self.sprite_shift[1]
+        group.draw(screen)
+
+    def _draw_with_offset(self, screen, group):
+        for sprite in group:
+            screen.blit(sprite.image, (sprite.rect.x - self.sprite_shift[0],
+                                       sprite.rect.y - self.sprite_shift[1]))
+
+    def _render_death_menu(self, screen):
+        # Escurece a tela para o menu
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))  # Semi-transparente
+        screen.blit(overlay, (0, 0))
+
+        # Título "Você Morreu"
+        text = self.font_large.render("Você Morreu", True, RED)
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - 120))
+
+        # Botão "Tentar Novamente"
+        pygame.draw.rect(screen, BLACK, self.retry_button)
+        pygame.draw.rect(screen, WHITE, self.retry_button, 3)
+        retry_text = self.font_medium.render("Tentar Novamente", True, WHITE)
+        screen.blit(retry_text, (self.retry_button.centerx - retry_text.get_width() // 2,
+                                 self.retry_button.centery - retry_text.get_height() // 2))
+
+    def _render_game(self, screen):
+        # Renderiza os poderes dos inimigos
+        for enemy in self.enemies_gp:
+            power = enemy.unleash_power(self.player.rect.center)
+            if power:
+                self.power_enemy_gp.add(power)
+
+        # Renderiza todos os componentes do jogo
+        self._move_group_and_render(screen, self.power_player_gp)
+        self._move_group_and_render(screen, self.power_enemy_gp)
+        self._move_group_and_render(screen, self.boundary_gp)
+        self._move_group_and_render(screen, self.enemies_gp)
+
+        if self.scene_name == "scene1":
+            self._draw_with_offset(screen, self.doors)
+            for door in self.doors:
+                door_center = (door.rect.centerx - self.sprite_shift[0],
+                               door.rect.centery - self.sprite_shift[1])
+                # pygame.draw.circle(screen, (255, 255, 0), door_center, door.interaction_radius, 1)
+
+        self.hud.draw(screen)
+        self._move_group_and_render(screen, self.player_gp, apply_offset=False)
+
+        # Desenha os poderes
+        screen.blit(self.player.current_power.image, self.player.current_power.rect)
+        for enemy in self.enemies_gp:
+            screen.blit(enemy.current_power.image, enemy.current_power.rect)
+
+    def _render_death_animation(self, screen):
+        # Animação de morte (efeito fade)
+        temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+        # Aplica efeito de escurecimento progressivo
+        alpha = min(255, int((1 - self.death_timer / 2.0) * 255))
+        darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        darken.fill((100, 0, 0))  # Vermelho escuro
+        darken.set_alpha(alpha)
+
+        screen.blit(temp_surface, (0, 0))
+        screen.blit(darken, (0, 0))
+
+        # Texto "Você Morreu" durante a animação
+        font = self.font_large
+        text = font.render("Você Morreu", True, RED)
+        text_alpha = min(255, int(alpha * 1.5))  # Texto aparece mais rápido que o fundo
+        text.set_alpha(text_alpha)
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
+                           SCREEN_HEIGHT // 2 - text.get_height() // 2))
+
+        self.hud.draw(screen)
+
+    def _render_death_menu_screen(self, screen):
+        # Depois da animação, mostra o menu de morte
+        temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+        # Aplicar um efeito de desfoque/escurecimento
+        darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        darken.fill((50, 0, 0))  # Vermelho muito escuro
+        darken.set_alpha(200)  # Bastante opaco
+
+        screen.blit(temp_surface, (0, 0))
+        screen.blit(darken, (0, 0))
+
+        # Renderiza o menu de morte
+        self._render_death_menu(screen)
+
+    def render(self, screen):
+        # Renderiza o vídeo musical de fundo
+        self.musical_video.update(screen)
+
+        # Renderiza transição se necessário
+        if self.transitioning:
+            transition_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            transition_surface.fill(BLACK)
+            transition_surface.set_alpha(self.transition_alpha)
+            screen.blit(transition_surface, (0, 0))
+
+        if not self.player.is_dead:
+            # Renderização normal do jogo
+            self._render_game(screen)
+        else:
+            # Renderização durante a morte do jogador
+            if not self.death_animation_complete:
+                self._render_death_animation(screen)
+            elif self.show_death_menu:
+                self._render_death_menu_screen(screen)
+import pygame.font
+import math
+import random
+from settings import *
+
+
+class IntroScene:
+    def __init__(self, game):
+        self.game = game
+
+        # Fontes para mensagens e textos
+        try:
+            self.message_font = pygame.font.SysFont("Courier New", 24)
+            self.small_font = pygame.font.SysFont("Courier New", 16)
+        except:
+            self.message_font = pygame.font.SysFont(None, 24)
+            self.small_font = pygame.font.SysFont(None, 16)
+
+        # Cores
+        self.dirty_white = (180, 180, 160)
+        self.blood_red = (120, 0, 0)
+        self.shadow_color = (15, 15, 20)
+        self.wall_color = (60, 60, 55)
+        self.floor_color = (40, 38, 35)
+
+        # Estado da cena
+        self.scene_phase = 0  # Fases da animação
+        self.phase_timer = 0
+        self.typing_index = 0
+        self.current_message = ""
+        self.message_complete = False
+
+        self.messages = [
+            "Bem-vindo ao Hospital Psiquiátrico St. Daemon...",
+            "Paciente #1372, seu tratamento hoje será... especial.",
+            "Ninguém pode ouvir seus gritos aqui...",
+            "O doutor estará com você em breve...",
+            "Não resista, apenas aceite o tratamento..."
+        ]
+
+        # Elementos do quarto
+        self.room_elements = self.create_room_elements()
+
+        # Efeitos visuais
+        self.flickering = 0
+        self.flicker_intensity = 0
+
+        # Manchas nas paredes/chão
+        self.stains = []
+        for _ in range(25):
+            self.stains.append({
+                'pos': (random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT)),
+                'size': random.randint(5, 40),
+                'color': (
+                    random.randint(60, 100),
+                    random.randint(0, 20),
+                    random.randint(0, 20),
+                    random.randint(20, 80)
+                ),
+                'type': random.choice(['circle', 'rect', 'splatter'])
+            })
+
+        # Arranhões nas paredes
+        self.scratches = []
+        for _ in range(15):
+            start_x = random.randint(100, SCREEN_WIDTH - 100)
+            start_y = random.randint(100, 400)
+            length = random.randint(30, 100)
+            self.scratches.append({
+                'start': (start_x, start_y),
+                'end': (start_x + random.randint(-length, length),
+                        start_y + random.randint(10, length)),
+                'width': random.randint(1, 3),
+                'color': (random.randint(20, 50), random.randint(10, 30), random.randint(10, 30))
+            })
+
+        # Escritos na parede (rabiscos)
+        self.wall_writings = []
+        wall_messages = ["SOCORRO", "SAIA", "ELE ESTÁ AQUI", "1372", "MORTE", "AJUDA"]
+        for _ in range(4):
+            message = random.choice(wall_messages)
+            self.wall_writings.append({
+                'text': message,
+                'pos': (random.randint(50, SCREEN_WIDTH - 100), random.randint(100, 400)),
+                'size': random.randint(20, 36),
+                'color': (random.randint(60, 120), 0, 0),
+                'angle': random.randint(-30, 30)
+            })
+
+        # Sombras/vultos nos cantos
+        self.shadows = []
+        for _ in range(6):
+            corner_x = random.choice([0, SCREEN_WIDTH])
+            corner_y = random.randint(0, SCREEN_HEIGHT)
+            size_x = random.randint(70, 150)
+            size_y = random.randint(100, 300)
+            self.shadows.append({
+                'rect': pygame.Rect(
+                    corner_x - size_x if corner_x == SCREEN_WIDTH else corner_x,
+                    corner_y - size_y // 2,
+                    size_x,
+                    size_y
+                ),
+                'alpha': random.randint(100, 180)
+            })
+
+        # Elementos de UI
+        self.typing_sound_timer = 0
+
+        # Efeito de respiração
+        self.breathing = 0
+        self.breath_speed = 1.0
+
+        # Variáveis para controle da transição
+        self.transitioning = False
+        self.transition_alpha = 0
+        self.transition_speed = 3
+        self.next_scene = None
+
+        # Variáveis para fade inicial
+        self.fade_in = True
+        self.fade_alpha = 255
+
+        # Variáveis para a sombra móvel
+        self.shadow_position = -200
+        self.shadow_direction = 1
+        self.shadow_speed = 0.5
+        self.shadow_appears = False
+
+        # Para o efeito de piscar os olhos
+        self.blink_timer = 0
+        self.blink_state = False
+
+        # Iniciar efeito de fade in
+        self.fade_in = True
+        self.fade_alpha = 255
+
+    def create_room_elements(self):
+        """Cria os elementos do quarto psiquiátrico"""
+        elements = []
+
+        # Cama de hospital
+        bed_frame = {
+            'type': 'rect',
+            'rect': pygame.Rect(SCREEN_WIDTH - 280, SCREEN_HEIGHT - 180, 180, 90),
+            'color': (80, 80, 90),
+            'outline': True,
+            'outline_color': (40, 40, 50),
+            'outline_width': 2,
+            'z_index': 1
+        }
+        elements.append(bed_frame)
+
+        # Colchão
+        mattress = {
+            'type': 'rect',
+            'rect': pygame.Rect(SCREEN_WIDTH - 270, SCREEN_HEIGHT - 175, 160, 80),
+            'color': (160, 160, 140),
+            'outline': False,
+            'z_index': 2
+        }
+        elements.append(mattress)
+
+        # Manchas no colchão
+        for _ in range(5):
+            stain = {
+                'type': 'circle',
+                'center': (
+                    SCREEN_WIDTH - 270 + random.randint(10, 150),
+                    SCREEN_HEIGHT - 175 + random.randint(10, 70)
+                ),
+                'radius': random.randint(5, 15),
+                'color': (random.randint(60, 100), random.randint(0, 20), random.randint(0, 20)),
+                'z_index': 3
+            }
+            elements.append(stain)
+
+        # Mesa de metal
+        table = {
+            'type': 'rect',
+            'rect': pygame.Rect(100, SCREEN_HEIGHT - 150, 120, 70),
+            'color': (100, 100, 110),
+            'outline': True,
+            'outline_color': (70, 70, 80),
+            'outline_width': 2,
+            'z_index': 1
+        }
+        elements.append(table)
+
+        # Instrumentos médicos na mesa
+        for _ in range(3):
+            inst = {
+                'type': 'rect',
+                'rect': pygame.Rect(
+                    110 + random.randint(0, 80),
+                    SCREEN_HEIGHT - 145 + random.randint(0, 50),
+                    random.randint(10, 30),
+                    random.randint(5, 15)
+                ),
+                'color': (200, 200, 210),
+                'outline': True,
+                'outline_color': (150, 150, 160),
+                'outline_width': 1,
+                'z_index': 2
+            }
+            elements.append(inst)
+
+        # Janela com barras
+        window_frame = {
+            'type': 'rect',
+            'rect': pygame.Rect(SCREEN_WIDTH // 2 - 100, 80, 200, 140),
+            'color': (30, 30, 50),
+            'outline': True,
+            'outline_color': (80, 80, 90),
+            'outline_width': 3,
+            'z_index': 1
+        }
+        elements.append(window_frame)
+
+        # Barras na janela
+        for i in range(5):
+            bar_x = SCREEN_WIDTH // 2 - 90 + i * 45
+            bar = {
+                'type': 'rect',
+                'rect': pygame.Rect(bar_x, 85, 10, 130),
+                'color': (70, 70, 80),
+                'outline': False,
+                'z_index': 2
+            }
+            elements.append(bar)
+
+        # Porta
+        door = {
+            'type': 'rect',
+            'rect': pygame.Rect(50, SCREEN_HEIGHT - 350, 120, 250),
+            'color': (60, 55, 50),
+            'outline': True,
+            'outline_color': (40, 35, 30),
+            'outline_width': 3,
+            'z_index': 1
+        }
+        elements.append(door)
+
+        # Maçaneta
+        doorknob = {
+            'type': 'circle',
+            'center': (140, SCREEN_HEIGHT - 230),
+            'radius': 8,
+            'color': (120, 120, 100),
+            'z_index': 2
+        }
+        elements.append(doorknob)
+
+        # Pequena janela na porta
+        door_window = {
+            'type': 'rect',
+            'rect': pygame.Rect(70, SCREEN_HEIGHT - 320, 80, 40),
+            'color': (20, 20, 35),
+            'outline': True,
+            'outline_color': (100, 100, 90),
+            'outline_width': 2,
+            'z_index': 2
+        }
+        elements.append(door_window)
+
+        # Grade na janela da porta
+        for i in range(3):
+            door_bar_v = {
+                'type': 'rect',
+                'rect': pygame.Rect(90 + i * 20, SCREEN_HEIGHT - 320, 3, 40),
+                'color': (100, 100, 90),
+                'outline': False,
+                'z_index': 3
+            }
+            elements.append(door_bar_v)
+
+        for i in range(2):
+            door_bar_h = {
+                'type': 'rect',
+                'rect': pygame.Rect(70, SCREEN_HEIGHT - 310 + i * 20, 80, 3),
+                'color': (100, 100, 90),
+                'outline': False,
+                'z_index': 3
+            }
+            elements.append(door_bar_h)
+
+        # Luz no teto
+        light = {
+            'type': 'rect',
+            'rect': pygame.Rect(SCREEN_WIDTH // 2 - 50, 40, 100, 20),
+            'color': (180, 180, 150),
+            'outline': True,
+            'outline_color': (150, 150, 120),
+            'outline_width': 2,
+            'z_index': 1
+        }
+        elements.append(light)
+
+        # Balde no canto
+        bucket = {
+            'type': 'circle',
+            'center': (SCREEN_WIDTH - 80, SCREEN_HEIGHT - 60),
+            'radius': 25,
+            'color': (80, 75, 70),
+            'z_index': 1
+        }
+        elements.append(bucket)
+
+        return elements
+
+    def handle_events(self, event):
+        # Se apertar qualquer tecla, avança a cena mais rapidamente
+        if event.type == pygame.KEYDOWN and event.key != pygame.K_q:
+            if self.message_complete:
+                # Avança para próxima fase
+                self.scene_phase += 1
+                self.typing_index = 0
+                self.message_complete = False
+                # Se estiver na última fase, inicia transição
+                if self.scene_phase >= len(self.messages):
+                    self.scene_phase = self.scene_phase%len(self.messages)
+                    self.transitioning = True
+            else:
+                # Completa a mensagem atual imediatamente
+                self.typing_index = len(self.messages[self.scene_phase])
+                self.message_complete = True
+
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            self.game.running = False
+
+    def update(self, dt):
+        # Atualiza o fade in inicial
+        if self.fade_in and self.fade_alpha > 0:
+            self.fade_alpha -= 2
+            if self.fade_alpha <= 0:
+                self.fade_in = False
+
+        # Atualiza o efeito de piscar
+        self.blink_timer += dt
+        if self.blink_timer > 5:  # A cada 5 segundos
+            self.blink_state = True
+            if self.blink_timer > 5.15:  # Duração do piscar: 0.15 segundos
+                self.blink_state = False
+                self.blink_timer = 0
+
+        # Atualiza o efeito de sombra móvel
+        if self.scene_phase > 1:  # Depois da segunda mensagem
+            self.shadow_appears = True
+            self.shadow_position += self.shadow_speed * self.shadow_direction
+
+            # Inverte direção nas bordas
+            if self.shadow_position > SCREEN_WIDTH + 100:
+                self.shadow_direction = -1
+            elif self.shadow_position < -200:
+                self.shadow_direction = 1
+
+        # Atualiza o efeito de digitação de texto
+        if not self.message_complete and self.scene_phase < len(self.messages):
+            self.typing_index += 0.5
+            if self.typing_index >= len(self.messages[self.scene_phase]):
+                self.typing_index = len(self.messages[self.scene_phase])
+                self.message_complete = True
+                # Reproduzir som de finalização de texto aqui
+            else:
+                # Reproduzir som de digitação a cada caractere
+                self.typing_sound_timer += dt
+                if self.typing_sound_timer > 0.05:  # Som a cada 0.05 segundos durante digitação
+                    self.typing_sound_timer = 0
+                    # Reproduzir typing_sound aqui
+
+        # Atualiza o efeito de respiração
+        self.breathing += dt * self.breath_speed
+        if self.breathing > 2 * math.pi:
+            self.breathing = 0
+
+        # Atualiza o efeito de flicker da luz
+        self.flickering += dt
+        if self.flickering > 0.1:
+            self.flickering = 0
+            if random.random() < 0.2:  # 20% de chance de piscar
+                self.flicker_intensity = random.uniform(0.5, 1.0)
+            else:
+                self.flicker_intensity = 0
+
+        # Lógica de transição
+        if self.transitioning:
+            self.transition_alpha += self.transition_speed
+            if self.transition_alpha >= 255:
+                from .menu import MenuScene
+                self.game.current_scene = MenuScene(self.game)
+                self.game.current_scene.transitioning = False
+                self.game.current_scene.transition_alpha = 0
+
+    def render(self, screen):
+        # Desenha o chão
+        pygame.draw.rect(screen, self.floor_color, (0, SCREEN_HEIGHT - 100, SCREEN_WIDTH, 100))
+
+        # Linha de junção parede/chão
+        pygame.draw.line(screen, (30, 30, 25), (0, SCREEN_HEIGHT - 100), (SCREEN_WIDTH, SCREEN_HEIGHT - 100), 3)
+
+        # Desenha a parede
+        pygame.draw.rect(screen, self.wall_color, (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - 100))
+
+        # Adiciona textura à parede (manchas)
+        for stain in self.stains:
+            if stain['pos'][1] < SCREEN_HEIGHT - 100:  # Apenas manchas na parede
+                if stain['type'] == 'circle':
+                    pygame.draw.circle(
+                        screen,
+                        stain['color'],
+                        stain['pos'],
+                        stain['size']
+                    )
+                elif stain['type'] == 'rect':
+                    pygame.draw.rect(
+                        screen,
+                        stain['color'],
+                        (stain['pos'][0], stain['pos'][1], stain['size'], stain['size'])
+                    )
+                else:  # splatter
+                    for _ in range(3):
+                        offset_x = random.randint(-stain['size'] // 2, stain['size'] // 2)
+                        offset_y = random.randint(-stain['size'] // 2, stain['size'] // 2)
+                        size = stain['size'] // random.randint(2, 4)
+                        pygame.draw.circle(
+                            screen,
+                            stain['color'],
+                            (stain['pos'][0] + offset_x, stain['pos'][1] + offset_y),
+                            size
+                        )
+
+        # Arranhões nas paredes
+        for scratch in self.scratches:
+            pygame.draw.line(
+                screen,
+                scratch['color'],
+                scratch['start'],
+                scratch['end'],
+                scratch['width']
+            )
+
+        # Escritos na parede
+        for writing in self.wall_writings:
+            # Criar uma fonte para o texto com o tamanho especificado
+            scribble_font = pygame.font.SysFont("Arial", writing['size'])
+            # Renderizar o texto
+            text_surf = scribble_font.render(writing['text'], True, writing['color'])
+            # Rotacionar o texto
+            text_surf = pygame.transform.rotate(text_surf, writing['angle'])
+            # Posicionar o texto
+            screen.blit(text_surf, writing['pos'])
+
+        # Desenha os elementos do quarto em ordem de z-index
+        sorted_elements = sorted(self.room_elements, key=lambda x: x.get('z_index', 0))
+        for element in sorted_elements:
+            if element['type'] == 'rect':
+                pygame.draw.rect(screen, element['color'], element['rect'])
+                if element.get('outline', False):
+                    pygame.draw.rect(screen, element['outline_color'], element['rect'],
+                                     element['outline_width'])
+            elif element['type'] == 'circle':
+                pygame.draw.circle(screen, element['color'], element['center'], element['radius'])
+
+        # Desenha uma sombra móvel (figura sombria passando pela janela)
+        if self.shadow_appears:
+            shadow_height = 80
+            shadow_surface = pygame.Surface((50, shadow_height), pygame.SRCALPHA)
+            shadow_surface.fill((0, 0, 0, 150))
+            screen.blit(shadow_surface, (self.shadow_position, 120))
+
+        # Desenha sombras nos cantos
+        for shadow in self.shadows:
+            shadow_surface = pygame.Surface((shadow['rect'].width, shadow['rect'].height), pygame.SRCALPHA)
+            shadow_surface.fill((0, 0, 0, shadow['alpha']))
+            screen.blit(shadow_surface, (shadow['rect'].x, shadow['rect'].y))
+
+        # Efeito de luz piscando
+        if self.flicker_intensity > 0:
+            flicker_overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            flicker_overlay.fill((0, 0, 0, int(100 * self.flicker_intensity)))
+            screen.blit(flicker_overlay, (0, 0))
+
+        # Mensagem atual
+        if self.scene_phase < len(self.messages):
+            current_display = self.messages[self.scene_phase][:int(self.typing_index)]
+            message_surf = self.message_font.render(current_display, True, self.dirty_white)
+
+            # Fundo escuro para o texto
+            text_bg = pygame.Surface((message_surf.get_width() + 20, message_surf.get_height() + 10))
+            text_bg.fill((0, 0, 0))
+            text_bg.set_alpha(180)
+            screen.blit(text_bg, (SCREEN_WIDTH // 2 - message_surf.get_width() // 2 - 10,
+                                  SCREEN_HEIGHT - 180))
+
+            # Texto
+            screen.blit(message_surf, (SCREEN_WIDTH // 2 - message_surf.get_width() // 2,
+                                       SCREEN_HEIGHT - 175))
+
+            # Indicador de "pressione qualquer tecla" quando mensagem completa
+            if self.message_complete:
+                continue_text = self.small_font.render("Pressione qualquer tecla para continuar...",
+                                                       True, self.dirty_white)
+                screen.blit(continue_text, (SCREEN_WIDTH // 2 - continue_text.get_width() // 2,
+                                            SCREEN_HEIGHT - 130))
+
+        # Efeito de vinheta (escurecimento nas bordas)
+        vignette = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        for i in range(12):
+            radius = int(max(SCREEN_WIDTH, SCREEN_HEIGHT) * (i / 10))
+            pygame.draw.circle(
+                vignette,
+                (0, 0, 0, i * 5),
+                (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+                radius
+            )
+        screen.blit(vignette, (0, 0))
+
+        # Efeito de "piscar os olhos"
+        if self.blink_state:
+            blink_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            blink_surface.fill((0, 0, 0))
+            screen.blit(blink_surface, (0, 0))
+
+        # Fade in no início
+        if self.fade_in:
+            fade_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            fade_surface.fill((0, 0, 0))
+            fade_surface.set_alpha(self.fade_alpha)
+            screen.blit(fade_surface, (0, 0))
+
+        # Renderiza overlay de transição se necessário
+        if self.transitioning:
+            transition_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            transition_surface.fill((0, 0, 0))
+
+            # Adiciona linhas horizontais distorcidas
+            line_count = int(self.transition_alpha / 10)
+            for i in range(line_count):
+                y_pos = int((i / line_count) * SCREEN_HEIGHT)
+                line_width = random.randint(1, 3)
+                line_offset = random.randint(-10, 10) if random.random() < 0.3 else 0
+                pygame.draw.line(
+                    transition_surface,
+                    (100, 0, 0),  # Linha vermelha
+                    (0 + line_offset, y_pos),
+                    (SCREEN_WIDTH + line_offset, y_pos),
+                    line_width
+                )
+
+            # Adiciona estática na transição
+            for _ in range(int(self.transition_alpha * 30)):
+                x = random.randint(0, SCREEN_WIDTH - 1)
+                y = random.randint(0, SCREEN_HEIGHT - 1)
+                color = random.randint(0, 100)
+                transition_surface.set_at((x, y), (color, 0, 0))  # Estática vermelha
+
+            transition_surface.set_alpha(self.transition_alpha)
+            screen.blit(transition_surface, (0, 0))import pygame.font
+import math
+import random
+from settings import *
+
+
+class MenuScene:
+    def __init__(self, game):
+        self.game = game
+
+        # Fontes com estilo perturbador
+        try:
+            self.title_font = pygame.font.Font(None, 120)  # Fallback para fonte padrão
+            self.option_font = pygame.font.Font(None, 36)
+            # Tente carregar fontes específicas se disponíveis no sistema
+            try:
+                self.title_font = pygame.font.SysFont("Chiller", 120)
+                self.option_font = pygame.font.SysFont("Courier New", 36)
+            except:
+                pass
+        except:
+            # Fallback para SysFont caso Font falhe
+            self.title_font = pygame.font.SysFont(None, 120)
+            self.option_font = pygame.font.SysFont(None, 36)
+
+        # Cores estilo hospital psiquiátrico abandonado
+        self.blood_red = (120, 0, 0)
+        self.dirty_white = (180, 180, 160)
+        self.sick_green = (50, 70, 40)
+        self.dark_shadow = (15, 15, 20)
+
+        # Texto com aparência danificada
+        self.title_text = self.title_font.render("OZAK", True, self.blood_red)
+        self.start_text = self.option_font.render("Pressione ESPAÇO para começar", True, self.dirty_white)
+        self.quit_text = self.option_font.render("Pressione Q para sair", True, self.dirty_white)
+
+        # Elementos de ambiente
+        self.flickering = 0
+        self.static_alpha = 0
+        self.static_direction = 1
+        self.heartbeat_timer = 0
+        self.heartbeat_state = 0
+
+        # Manchas e marcas
+        self.stains = []
+        for _ in range(15):
+            self.stains.append({
+                'pos': (random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT)),
+                'size': random.randint(5, 80),
+                'color': (
+                    random.randint(80, 130),
+                    random.randint(0, 30),
+                    random.randint(0, 30),
+                    random.randint(30, 120)
+                ),
+                'type': random.choice(['circle', 'rect', 'splatter'])
+            })
+
+        # Cria efeito de papel na parede rasgado
+        self.wall_tears = []
+        for _ in range(8):
+            self.wall_tears.append({
+                'x': random.randint(0, SCREEN_WIDTH),
+                'y': random.randint(0, SCREEN_HEIGHT),
+                'width': random.randint(10, 100),
+                'height': random.randint(50, 200),
+                'color': self.dark_shadow
+            })
+
+        # Marcas de arranhões
+        self.scratches = []
+        for _ in range(12):
+            start_x = random.randint(0, SCREEN_WIDTH)
+            start_y = random.randint(0, SCREEN_HEIGHT)
+            self.scratches.append({
+                'start': (start_x, start_y),
+                'lines': [
+                    (start_x + random.randint(-50, 50), start_y + random.randint(10, 70)),
+                    (start_x + random.randint(-50, 50), start_y + random.randint(10, 70)),
+                    (start_x + random.randint(-50, 50), start_y + random.randint(10, 70))
+                ],
+                'width': random.randint(1, 3),
+                'color': (random.randint(60, 100), 0, 0, random.randint(50, 180))
+            })
+
+        # Efeito de piscar texto
+        self.text_visible = True
+        self.blink_timer = 0
+        self.blink_speed = random.uniform(0.5, 2.0)
+        self.blink_duration = random.uniform(0.05, 0.2)
+
+        # Variáveis para controle da transição
+        self.transitioning = False
+        self.transition_alpha = 0
+        self.transition_speed = 5
+        # self.next_scene = None
+
+        # Efeito de respiração
+        self.breathing = 0
+
+        # Cria textura de estática
+        self.static_texture = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        self.update_static_texture()
+
+        # Sons (apenas definidos aqui, precisariam ser carregados e inicializados)
+        self.ambient_sound = None
+        self.heartbeat_sound = None
+        self.static_sound = None
+
+    def update_static_texture(self):
+        """Atualiza a textura de estática"""
+        self.static_texture.fill((0, 0, 0, 0))
+        for _ in range(5000):
+            x = random.randint(0, SCREEN_WIDTH - 1)
+            y = random.randint(0, SCREEN_HEIGHT - 1)
+            color = random.randint(0, 255)
+            alpha = random.randint(5, 30)
+            self.static_texture.set_at((x, y), (color, color, color, alpha))
+
+    def handle_events(self, event):
+        if event.type == pygame.KEYDOWN and not self.transitioning:
+            if event.key == pygame.K_SPACE:
+                # Som de porta de hospital batendo poderia ser adicionado aqui
+                self.transitioning = True
+            elif event.key == pygame.K_q:
+                self.game.running = False
+
+    def update(self, dt):
+        # Atualiza o efeito de piscar da luz
+        self.flickering += dt
+        if self.flickering > 0.1:
+            self.flickering = 0
+            if random.random() < 0.2:  # 20% chance de piscar
+                self.text_visible = not self.text_visible
+
+        # Efeito de respiração nas opções do menu
+        self.breathing += dt * 1.5
+        if self.breathing > 2 * math.pi:
+            self.breathing = 0
+
+        # Atualiza o temporizador de piscar
+        self.blink_timer += dt
+        if self.blink_timer > self.blink_speed:
+            self.blink_timer = 0
+            self.text_visible = not self.text_visible
+            self.blink_speed = random.uniform(0.5, 3.0)
+
+        # Atualiza o efeito de batimento cardíaco
+        self.heartbeat_timer += dt
+        if self.heartbeat_state == 0 and self.heartbeat_timer > 0.8:
+            self.heartbeat_state = 1
+            self.heartbeat_timer = 0
+            # Tocar primeiro som de batida cardíaca aqui
+        elif self.heartbeat_state == 1 and self.heartbeat_timer > 0.2:
+            self.heartbeat_state = 0
+            self.heartbeat_timer = 0
+            # Tocar segundo som de batida cardíaca aqui
+
+        # Atualiza a estática
+        self.static_alpha += dt * 60 * self.static_direction
+        if self.static_alpha > 40:
+            self.static_direction = -1
+        elif self.static_alpha < 5:
+            self.static_direction = 1
+            self.update_static_texture()
+
+        # Lógica de transição
+        if self.transitioning:
+            self.transition_alpha += self.transition_speed
+            self.game.door_sound.set_volume(0.5 - 0.5*self.transition_alpha/255)
+            if self.transition_alpha >= 255:
+                self.game.door_sound.set_volume(0)
+                from .game import GameScene
+
+                self.game.current_scene = GameScene(self.game, "scene1")
+                self.game.current_scene.transitioning = True
+                self.game.current_scene.transition_alpha = 255
+
+    def render(self, screen):
+        # Fundo de hospital sujo
+        screen.fill(self.sick_green)
+
+        # Renderiza os rasgos na parede
+        for tear in self.wall_tears:
+            pygame.draw.rect(screen, tear['color'],
+                             (tear['x'], tear['y'], tear['width'], tear['height']))
+
+        # Renderiza as manchas de "sangue" e sujeira
+        for stain in self.stains:
+            if stain['type'] == 'circle':
+                pygame.draw.circle(
+                    screen,
+                    stain['color'],
+                    stain['pos'],
+                    stain['size']
+                )
+            elif stain['type'] == 'rect':
+                pygame.draw.rect(
+                    screen,
+                    stain['color'],
+                    (stain['pos'][0], stain['pos'][1], stain['size'], stain['size'])
+                )
+            else:  # splatter
+                for _ in range(5):
+                    offset_x = random.randint(-stain['size'] // 2, stain['size'] // 2)
+                    offset_y = random.randint(-stain['size'] // 2, stain['size'] // 2)
+                    size = stain['size'] // random.randint(2, 6)
+                    pygame.draw.circle(
+                        screen,
+                        stain['color'],
+                        (stain['pos'][0] + offset_x, stain['pos'][1] + offset_y),
+                        size
+                    )
+
+        # Renderiza os arranhões
+        for scratch in self.scratches:
+            for line_end in scratch['lines']:
+                pygame.draw.line(
+                    screen,
+                    scratch['color'],
+                    scratch['start'],
+                    line_end,
+                    scratch['width']
+                )
+
+        # Adiciona padrão de azulejos de hospital
+        tile_size = 40
+        for x in range(0, SCREEN_WIDTH, tile_size):
+            pygame.draw.line(screen, (100, 100, 90), (x, 0), (x, SCREEN_HEIGHT), 1)
+        for y in range(0, SCREEN_HEIGHT, tile_size):
+            pygame.draw.line(screen, (100, 100, 90), (0, y), (SCREEN_WIDTH, y), 1)
+
+        # Efeito de respiração para o título
+        breathing_scale = 1 + math.sin(self.breathing) * 0.03
+        # Efeito de heartbeat
+        if self.heartbeat_state == 1:
+            breathing_scale += 0.05
+
+        # Cria uma versão "sangrando" do título
+        bleeding_title = self.title_text.copy()
+        blood_drips = pygame.Surface((bleeding_title.get_width(), bleeding_title.get_height() + 30), pygame.SRCALPHA)
+
+        # Adiciona "sangue escorrendo"
+        for x in range(0, bleeding_title.get_width(), 4):
+            if random.random() < 0.3:  # 30% de chance de gota de sangue
+                drip_length = random.randint(5, 30)
+                drip_width = random.randint(2, 5)
+
+                start_y = random.randint(bleeding_title.get_height() - 10, bleeding_title.get_height())
+                pygame.draw.rect(
+                    blood_drips,
+                    (120, 0, 0, random.randint(100, 200)),
+                    (x, start_y, drip_width, drip_length)
+                )
+
+                # Adiciona gota na ponta
+                if random.random() < 0.5:
+                    pygame.draw.circle(
+                        blood_drips,
+                        (120, 0, 0, random.randint(100, 200)),
+                        (x + drip_width // 2, start_y + drip_length),
+                        drip_width
+                    )
+
+        # Combina o título com o sangue
+        combined_title = pygame.Surface((bleeding_title.get_width(), bleeding_title.get_height() + 30), pygame.SRCALPHA)
+        combined_title.blit(bleeding_title, (0, 0))
+        combined_title.blit(blood_drips, (0, 0))
+
+        # Redimensiona o título com efeito de respiração
+        scaled_title = pygame.transform.scale(
+            combined_title,
+            (int(combined_title.get_width() * breathing_scale),
+             int(combined_title.get_height() * breathing_scale))
+        )
+
+        # Centraliza textos na tela
+        title_x = SCREEN_WIDTH // 2 - scaled_title.get_width() // 2
+        title_y = 150
+
+        # Sombra do título
+        shadow_offset = 3
+        screen.blit(
+            pygame.transform.scale(combined_title, (scaled_title.get_width(), scaled_title.get_height())),
+            (title_x + shadow_offset, title_y + shadow_offset)
+        )
+
+        # Renderiza o título
+        screen.blit(scaled_title, (title_x, title_y))
+
+        # Só mostra o texto quando visível (efeito de piscar)
+        if self.text_visible:
+            # Estilo de botão de hospital desgastado para opções
+            start_y = 400
+            quit_y = 500
+
+            # Botões com aparência de placas de hospital antigas
+            for text, y in [(self.start_text, start_y), (self.quit_text, quit_y)]:
+                button_rect = pygame.Rect(
+                    SCREEN_WIDTH // 2 - text.get_width() // 2 - 20,
+                    y - 10,
+                    text.get_width() + 40,
+                    text.get_height() + 20
+                )
+
+                # Fundo do botão (placa velha)
+                pygame.draw.rect(screen, (80, 80, 70), button_rect)
+
+                # Borda enferrujada
+                pygame.draw.rect(screen, (120, 60, 30), button_rect, 2)
+
+                # Adiciona alguns "parafusos" nos cantos
+                for corner in [
+                    (button_rect.left + 5, button_rect.top + 5),
+                    (button_rect.right - 5, button_rect.top + 5),
+                    (button_rect.left + 5, button_rect.bottom - 5),
+                    (button_rect.right - 5, button_rect.bottom - 5)
+                ]:
+                    pygame.draw.circle(screen, (60, 60, 50), corner, 3)
+
+                # Adiciona rachaduras aleatórias na placa
+                for _ in range(3):
+                    start_x = random.randint(button_rect.left, button_rect.right)
+                    start_y = random.randint(button_rect.top, button_rect.bottom)
+                    end_x = start_x + random.randint(-30, 30)
+                    end_y = start_y + random.randint(-20, 20)
+                    pygame.draw.line(screen, (40, 40, 30), (start_x, start_y), (end_x, end_y), 1)
+
+            # Renderiza texto
+            screen.blit(self.start_text, (SCREEN_WIDTH // 2 - self.start_text.get_width() // 2, start_y))
+            screen.blit(self.quit_text, (SCREEN_WIDTH // 2 - self.quit_text.get_width() // 2, quit_y))
+
+        # Adiciona um texto de advertência psiquiátrica
+        warning_font = pygame.font.SysFont("Courier New", 14)
+        warning_text = warning_font.render("PACIENTE #1372 - TRATAMENTO RESTRITO", True, (150, 0, 0))
+        screen.blit(warning_text, (20, SCREEN_HEIGHT - 30))
+
+        date_text = warning_font.render("ADMISSÃO: 13/06/1973 - CASO: SEVERO", True, (150, 0, 0))
+        screen.blit(date_text, (SCREEN_WIDTH - date_text.get_width() - 20, 20))
+
+        # Sobreposição de estática
+        static_overlay = self.static_texture.copy()
+        static_overlay.set_alpha(int(self.static_alpha))
+        screen.blit(static_overlay, (0, 0))
+
+        # Efeito de vinheta (escurecimento nas bordas)
+        vignette = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+        # Cria gradiente circular para vinheta
+        for i in range(12):
+            radius = int(max(SCREEN_WIDTH, SCREEN_HEIGHT) * (i / 10))
+            pygame.draw.circle(
+                vignette,
+                (0, 0, 0, i * 5),
+                (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+                radius
+            )
+
+        screen.blit(vignette, (0, 0))
+
+        # Renderiza overlay de transição se necessário
+        if self.transitioning:
+            # Transição estilo filmagem antiga de hospital
+            transition_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+            # Adiciona linhas horizontais distorcidas
+            line_count = int(self.transition_alpha / 10)
+            for i in range(line_count):
+                y_pos = int((i / line_count) * SCREEN_HEIGHT)
+                line_width = random.randint(1, 3)
+                line_offset = random.randint(-10, 10) if random.random() < 0.3 else 0
+                pygame.draw.line(
+                    transition_surface,
+                    (0, 0, 0),
+                    (0 + line_offset, y_pos),
+                    (SCREEN_WIDTH + line_offset, y_pos),
+                    line_width
+                )
+
+            # Adiciona estática na transição
+            for _ in range(int(self.transition_alpha * 30)):
+                x = random.randint(0, SCREEN_WIDTH - 1)
+                y = random.randint(0, SCREEN_HEIGHT - 1)
+                color = random.randint(0, 255)
+                transition_surface.set_at((x, y), (color, color, color))
+
+            transition_surface.set_alpha(self.transition_alpha)
+            screen.blit(transition_surface, (0, 0))import cv2
+from settings import *
+import os
+
+class MusicalVideo:
+
+    def __init__(self):
+        video_path = os.path.join("..", "assets", "video", "bad_apple.mp4")
+        self.video = cv2.VideoCapture(video_path)
+        sound_path = os.path.join("..", "assets", "music", "bad_apple.mp3")
+        self.sound = pygame.mixer.Sound(sound_path)
+        self.sound.set_volume(0.5)
+        self.sound.play(loops=0)
+
+    def update(self, screen):
+        success, video_image = self.video.read()
+
+        if success:
+            video_surf = pygame.image.frombuffer(
+                video_image.tobytes(), video_image.shape[1::-1], "BGR")
+            screen.blit(video_surf, (0, 0))
+        else:
+            screen.fill(BLACK)
+
+    def end_music(self):
+        self.sound.set_volume(0)
+

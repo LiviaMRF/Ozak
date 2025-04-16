@@ -90,9 +90,8 @@ class GameScene:
 
         self.change_status = change_status
 
-        is_playing_music = True if pygame.mixer.get_busy() else False
-        self.game_over = GameOver(self.player, self.hud, is_playing_music,
-                                  callback_intro=lambda: self._restart_intro(), callback_retry=lambda: self._restart_game())
+        self.game_over = GameOver(self.player, self.hud, callback_intro=lambda: self._restart_intro(), 
+                                  callback_retry=lambda: self._restart_game())
 
     def _init_boundary(self, change_status):
         self.boundary = Boundary() if change_status else self.game.current_scene.boundary
@@ -178,7 +177,6 @@ class GameScene:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:
-                self.musical_video.end_music()
                 pygame.quit()
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -270,7 +268,7 @@ class GameScene:
 
     def render(self, screen):
         # Renderiza o vídeo musical de fundo
-        self.musical_video.update(screen)
+        self.musical_video.update(screen, self.player.is_dead)
 
         # Renderiza transição se necessário
         if self.transitioning:
@@ -283,20 +281,20 @@ class GameScene:
             # Renderização normal do jogo
             self._render_game(screen)
         else:
+            self.game_over.select_game_over(self.scene_time)
             self.game_over.render(screen)
-            self.musical_video.update(screen, True)
-
+            
 
 class GameOver:
-    def __init__(self, player, hud, is_playing_music, callback_intro, callback_retry):
+    def __init__(self, player, hud, callback_intro, callback_retry):
         self.player = player
         self.hud = hud
         self.callback_retry = callback_retry
         self.callback_intro = callback_intro
-        self.is_playing_music = is_playing_music
 
         # Inicializacao dos parametros do Game Over
-        self.death_timer = 4
+        self.death_timer_max = 5.0
+        self.death_timer = self.death_timer_max
         self.death_animation_complete = False
         self.show_death_menu = False
 
@@ -310,6 +308,25 @@ class GameOver:
         self.retry_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height)
         self.quit_button = pygame.Rect(button_x, SCREEN_HEIGHT // 2 + 100, button_width, button_height)
 
+        self.game_over_retry = None
+
+    def select_game_over(self, scene_time):
+        if self.game_over_retry == None:
+            if scene_time < 215:
+                self.game_over_retry = True
+                sound_path = os.path.join("..", "assets", "music", "gameover_retry.mp3")
+                self.death_timer_max = 5.0
+
+            else:
+                self.death_timer_max = 12.0
+                self.game_over_retry = False
+                sound_path = os.path.join("..", "assets", "music", "gameover_intro.mp3")
+            
+            self.death_timer = self.death_timer_max
+            self.sound = pygame.mixer.Sound(sound_path)
+            self.sound.set_volume(0)
+            self.sound.play(loops=-1)
+    
     def update(self, dt):
         if not self.death_animation_complete:
             self.death_timer -= dt
@@ -320,6 +337,7 @@ class GameOver:
     def handle_events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.retry_button.collidepoint(pygame.mouse.get_pos()):
+                self.sound.stop()
                 self.callback_retry()
 
     def render(self, screen):
@@ -329,14 +347,15 @@ class GameOver:
             self._render_death_menu(screen)
 
     def _render_death_animation(self, screen):
-
-        alpha = min(255, int((1 - self.death_timer / 2.0) * 255))
+        self.sound.set_volume((1 - self.death_timer / self.death_timer_max)*2)
+        
+        alpha = min(255, int((1 - self.death_timer / self.death_timer_max) * 255))
         darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         darken.fill((100, 0, 0))
         darken.set_alpha(alpha)
 
         screen.blit(darken, (0, 0))
-        if self.is_playing_music:
+        if self.game_over_retry:
             text = self.font_large.render("Você Morreu", True, RED)
             text.set_alpha(min(255, int(alpha * 1.5)))
             screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
@@ -355,9 +374,9 @@ class GameOver:
 
 
     def _render_death_menu(self, screen):
-        if self.is_playing_music:
+        if self.game_over_retry:
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 180))
+            overlay.fill(BLACK)
             screen.blit(overlay, (0, 0))
 
             # Texto "Você Morreu"
@@ -378,4 +397,5 @@ class GameOver:
             screen.blit(quit_text, (self.quit_button.centerx - quit_text.get_width() // 2,
                                     self.quit_button.centery - quit_text.get_height() // 2))
         else:
+            self.sound.stop()
             self.callback_intro()

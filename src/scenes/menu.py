@@ -4,8 +4,10 @@ import random
 from settings import *
 
 class MenuScene:
-    def __init__(self, game):
+    def __init__(self, game, door_sound):
         self.game = game
+        self.door_sound = door_sound
+
         # try:
         #Carregar as fontes dos arquivos
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -114,6 +116,7 @@ class MenuScene:
             if event.key == pygame.K_SPACE:
                 # Som de porta de hospital batendo poderia ser adicionado aqui
                 self.transitioning = True
+                self.door_sound.stop()
             elif event.key == pygame.K_q:
                 self.game.running = False
 
@@ -159,9 +162,7 @@ class MenuScene:
         # Lógica de transição
         if self.transitioning:
             self.transition_alpha += self.transition_speed
-            self.game.door_sound.set_volume(0.5 - 0.5*self.transition_alpha/255)
             if self.transition_alpha >= 255:
-                self.game.door_sound.set_volume(0)
                 from .game import GameScene
 
                 self.game.current_scene = GameScene(self.game, "scene1")
